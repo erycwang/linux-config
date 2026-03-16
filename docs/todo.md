@@ -6,15 +6,11 @@ Gaps and planned changes to the current system setup, ordered by priority.
 
 ## Priority 1 — Security & Power (do these first)
 
-### Keyring daemon (gnome-keyring)
+### Keyring daemon (gnome-keyring) ✅ Done
 
-**GitHub CLI credentials are currently stored in plaintext** at `~/.config/gh/hosts.yml`. No Secret Service keyring daemon is running.
-
-- Install `gnome-keyring` and `libsecret`: `sudo pacman -S gnome-keyring libsecret`
-- Add to Hyprland config: `exec-once = gnome-keyring-daemon --start --components=secrets`
-- Wipe plaintext credentials and reauth: `rm ~/.config/gh/hosts.yml && gh auth login`
-
-**Why this is Priority 1**: GitHub token sitting in plaintext is a security gap.
+- `gnome-keyring` installed, autostarted in Hyprland with `--components=secrets` (secrets only — gpg-agent handles SSH/GPG)
+- `gh auth login` re-run; token now stored in keyring (`gh auth status` confirms `(keyring)`)
+- `hosts.yml` no longer contains `oauth_token`
 
 ---
 
@@ -229,7 +225,7 @@ The [ArchWiki](https://wiki.archlinux.org/title/Mac/Troubleshooting) suggests ad
 
 | Item | Priority | Status |
 |---|---|---|
-| Keyring daemon (gnome-keyring) | 🔴 High | Not started — gh token in plaintext |
+| Keyring daemon (gnome-keyring) | 🟢 Done | ✅ Token in keyring, hosts.yml clean |
 | Lock screen (hyprlock + hypridle) | 🔴 High | Not started |
 | Suspend (test + configure) | 🟢 Done | Fix 2 v5 — keyboard ✅, WiFi ✅, audio ✅, Touch Bar ✅ |
 | Status bar (quickshell) | 🟠 Medium | Not started |

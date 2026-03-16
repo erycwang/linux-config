@@ -30,7 +30,7 @@
 | **Networking** | iwd (WiFi), NetworkManager |
 | **Bluetooth** | bluetooth daemon |
 | **Power management** | power-profiles-daemon |
-| **Suspend (T2)** | suspend-fix-t2.service (unloads apple-bce + brcmfmac around sleep, stops/starts NetworkManager; s2idle mode) |
+| **Suspend (T2)** | suspend-fix-t2.service (unloads apple-bce + brcmfmac + iwd around sleep; S3 deep sleep) |
 | **Fan control (T2)** | t2fanrd (enabled, active) |
 | **Storage optimization** | Snapper (BTRFS snapshots, configured for root) |
 
@@ -61,6 +61,16 @@
 | **Idle/suspend daemon** | kidletime (installed, unused) | Not configured |
 | **Clipboard** | wl-clipboard | ✅ |
 | **Polkit agent** | hyprpolkitagent (at `/usr/local/libexec/`) | ✅ |
+
+---
+
+## Credential & Key Management
+
+| Component | Setup |
+|---|---|
+| **Secret store** | gnome-keyring (secrets component only; autostarted via Hyprland exec-once) |
+| **GPG agent** | gpg-agent (systemd user socket activation; also handles SSH via gpg-agent-ssh.socket) |
+| **SSH agent** | gpg-agent (no separate ssh-agent; uses gpg-agent SSH emulation) |
 
 ---
 
