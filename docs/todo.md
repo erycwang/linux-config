@@ -34,7 +34,7 @@ Gaps and planned changes to the current system setup, ordered by priority.
 
 #### Fix 1 — Switch from `deep` to `s2idle` sleep
 
-S3 deep sleep is broken at the firmware level (since macOS Sonoma). Switch to s2idle:
+[OPTIONAL - we seem to be able to reboot from deep sleep as long as we unload the drivers] S3 deep sleep is broken at the firmware level (since macOS Sonoma). Switch to s2idle:
 
 - Add `mem_sleep_default=s2idle` to kernel parameters in `/etc/default/limine`:
   ```
@@ -50,13 +50,20 @@ S3 deep sleep is broken at the firmware level (since macOS Sonoma). Switch to s2
 - **Test without rebooting**: `echo s2idle | sudo tee /sys/power/mem_sleep && systemctl suspend`
 - Trade-off: `s2idle` uses more battery than true S3 (CPU stays in low-power idle rather than fully powering down)
 
-#### Fix 2 — Unload T2 and WiFi modules around suspend ✅ Done (v2)
+
+#### Fix 2 — Unload T2 and WiFi modules around suspend ✅ Done (v4)
 
 `/etc/systemd/system/suspend-fix-t2.service` deployed and enabled.
 
 **v1 issue (2026-03-15)**: `rmmod brcmfmac` failed with "Resource temporarily unavailable" because NetworkManager held the device. Service failed, so `ExecStop` never ran — `apple-bce` stayed unloaded on resume, leaving keyboard/trackpad dead.
 
-**v2 fix**: Stop NetworkManager before unloading modules. All `ExecStart` lines use `=-` prefix so failures are non-fatal and `ExecStop` always runs on resume.
+**v2 issue**: Stopping NetworkManager alone wasn't enough — `rmmod brcmfmac` still failed with "Resource temporarily unavailable" because the device wasn't fully released. WiFi stayed loaded through suspend and failed to communicate with the chip on resume (`timed out waiting for txstatus`). Touch Bar also didn't resume (modules weren't managed).
+
+**v3 fix**: Added `rfkill block wifi` to force-release the device, a 1s settle delay before rmmod, separate rmmod lines so one failure doesn't skip others. Also added Touch Bar modules (`hid_appletb_kbd`, `hid_appletb_bl`) and a 2s delay on resume to let `apple-bce` initialize before reloading dependent modules.
+
+**v3 result (2026-03-15)**: Keyboard/Touch Bar now work after resume ✅. WiFi still fails — `rmmod brcmfmac` kept getting "Resource temporarily unavailable" because the kernel network interface (`wlan0`) remained up and held a module reference count, even after NM stop + rfkill.
+
+**v4 fix (2026-03-15)**: Added `ip link set wlan0 down` between rfkill and rmmod to release the kernel interface reference. Also added `rmmod -f brcmfmac brcmfmac_wcc` on the resume side before `modprobe brcmfmac` as a safety net — if pre-suspend rmmod still fails, this clears the stale broken module before a clean reload. Added 1s delay after modprobe before starting NetworkManager.
 
 ```ini
 [Unit]
@@ -69,9 +76,20 @@ User=root
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=-/usr/bin/systemctl stop NetworkManager
-ExecStart=-/usr/bin/rmmod -f apple-bce brcmfmac brcmfmac_wcc
+ExecStart=-/usr/bin/rfkill block wifi
+ExecStart=-/usr/bin/ip link set wlan0 down
+ExecStart=-/usr/bin/sleep 1
+ExecStart=-/usr/bin/rmmod -f brcmfmac brcmfmac_wcc
+ExecStart=-/usr/bin/rmmod -f hid_appletb_kbd hid_appletb_bl
+ExecStart=-/usr/bin/rmmod -f apple-bce
 ExecStop=/usr/bin/modprobe apple-bce
+ExecStop=/usr/bin/sleep 2
+ExecStop=/usr/bin/modprobe hid_appletb_bl
+ExecStop=/usr/bin/modprobe hid_appletb_kbd
+ExecStop=/usr/bin/rfkill unblock wifi
+ExecStop=-/usr/bin/rmmod -f brcmfmac brcmfmac_wcc
 ExecStop=/usr/bin/modprobe brcmfmac
+ExecStop=/usr/bin/sleep 1
 ExecStop=/usr/bin/systemctl start NetworkManager
 
 [Install]
@@ -81,12 +99,9 @@ WantedBy=sleep.target
 After enabling, remove or disable the old wifi-sleep script to avoid conflicts:
 `sudo rm /usr/lib/systemd/system-sleep/wifi-sleep` (note: may be recreated by package updates)
 
-#### Fix 3 — Touch Bar module management
+#### Fix 3 — Touch Bar module management ✅ Merged into Fix 2 v3
 
-`tiny-dfr` is **not currently installed**. The Touch Bar is driven by `hid_appletb_bl` and `hid_appletb_kbd` kernel modules. If the Touch Bar fails to resume, add these to the service above:
-
-- Add to ExecStart: `/usr/bin/rmmod hid_appletb_kbd hid_appletb_bl`
-- Add to ExecStop (after apple-bce reload): `/usr/bin/modprobe hid_appletb_bl` then `/usr/bin/modprobe hid_appletb_kbd`
+Touch Bar modules (`hid_appletb_kbd`, `hid_appletb_bl`) are now managed by `suspend-fix-t2.service` — see v3 above.
 - If `tiny-dfr` is installed later, also add `systemctl stop/start tiny-dfr` around suspend
 
 #### Fix 4 — Disable ACPI wakeup sources that cause spurious wakes
@@ -198,7 +213,7 @@ The [ArchWiki](https://wiki.archlinux.org/title/Mac/Troubleshooting) suggests ad
 | Item | Priority | Status |
 |---|---|---|
 | Lock screen (hyprlock + hypridle) | 🔴 High | Not started |
-| Suspend (test + configure) | 🔴 High | Fix 2 v2 deployed, testing s2idle now |
+| Suspend (test + configure) | 🔴 High | Fix 2 v4 deployed (keyboard ✅, WiFi testing) |
 | Status bar (quickshell) | 🟠 Medium | Not started |
 | Notification daemon (mako) | 🟠 Medium | Not started |
 | Browser migration (Brave) | 🟡 Planned | Not started |

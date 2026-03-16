@@ -6,6 +6,33 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-15
 
+### Updated `suspend-fix-t2.service` to v4
+
+- **What**: Added `ip link set wlan0 down` pre-suspend and force-reload safety net on resume
+- **Why**: v3's `rmmod brcmfmac` was still failing with "Resource temporarily unavailable" — rfkill + NM stop left the kernel interface up, holding a module reference count. v3 result: keyboard/Touch Bar ✅, WiFi still dead on resume.
+- **Changes in v4**:
+  - Added `ip link set wlan0 down` between rfkill and rmmod — releases the kernel interface reference that was blocking rmmod
+  - Added `rmmod -f brcmfmac brcmfmac_wcc` on resume (before modprobe) as safety net — if pre-suspend rmmod fails, this clears the stale broken module before a clean reload
+  - Added 1s delay after modprobe before starting NetworkManager
+- **Deploy**: `sudo cp ~/Projects/linux-config/suspend-fix-t2.service /etc/systemd/system/ && sudo systemctl daemon-reload`
+
+---
+
+### Updated `suspend-fix-t2.service` to v3
+
+- **What**: Rewrote suspend service to fix WiFi and Touch Bar not resuming after suspend
+- **Why**: v2's `rmmod brcmfmac` still failed ("Resource temporarily unavailable") despite stopping NetworkManager — the device wasn't fully released. WiFi chip was unresponsive on resume (`timed out waiting for txstatus`). Touch Bar also didn't resume.
+- **Changes in v3**:
+  - Added `rfkill block wifi` before rmmod to force-release the WiFi device
+  - Added 1s settle delay before rmmod
+  - Separate rmmod lines so one failure doesn't skip others
+  - Added Touch Bar modules (`hid_appletb_kbd`, `hid_appletb_bl`) — unloaded on suspend, reloaded on resume
+  - Added 2s delay on resume to let `apple-bce` initialize before reloading dependent modules
+  - Added `rfkill unblock wifi` on resume before reloading brcmfmac
+- **Deploy**: `sudo cp ~/Projects/linux-config/suspend-fix-t2.service /etc/systemd/system/ && sudo systemctl daemon-reload`
+
+---
+
 ### Installed `hyprshot` and bound screenshot key
 
 - **What**: Installed `hyprshot` (AUR); bound `Super+Shift+X` → `hyprshot -m region` in `hyprland.conf`

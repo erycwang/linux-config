@@ -8,10 +8,20 @@ User=root
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=-/usr/bin/systemctl stop NetworkManager
-ExecStart=-/usr/bin/rmmod brcmfmac_wcc brcmfmac
+ExecStart=-/usr/bin/rfkill block wifi
+ExecStart=-/usr/bin/ip link set wlan0 down
+ExecStart=-/usr/bin/sleep 1
+ExecStart=-/usr/bin/rmmod -f brcmfmac brcmfmac_wcc
+ExecStart=-/usr/bin/rmmod -f hid_appletb_kbd hid_appletb_bl
 ExecStart=-/usr/bin/rmmod -f apple-bce
 ExecStop=/usr/bin/modprobe apple-bce
+ExecStop=/usr/bin/sleep 2
+ExecStop=/usr/bin/modprobe hid_appletb_bl
+ExecStop=/usr/bin/modprobe hid_appletb_kbd
+ExecStop=/usr/bin/rfkill unblock wifi
+ExecStop=-/usr/bin/rmmod -f brcmfmac brcmfmac_wcc
 ExecStop=/usr/bin/modprobe brcmfmac
+ExecStop=/usr/bin/sleep 1
 ExecStop=/usr/bin/systemctl start NetworkManager
 
 [Install]
