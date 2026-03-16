@@ -6,30 +6,50 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-15
 
-### Updated `suspend-fix-t2.service` to v4
+### Suspend fully fixed — `suspend-fix-t2.service` v5 ✅
 
-- **What**: Added `ip link set wlan0 down` pre-suspend and force-reload safety net on resume
-- **Why**: v3's `rmmod brcmfmac` was still failing with "Resource temporarily unavailable" — rfkill + NM stop left the kernel interface up, holding a module reference count. v3 result: keyboard/Touch Bar ✅, WiFi still dead on resume.
-- **Changes in v4**:
-  - Added `ip link set wlan0 down` between rfkill and rmmod — releases the kernel interface reference that was blocking rmmod
-  - Added `rmmod -f brcmfmac brcmfmac_wcc` on resume (before modprobe) as safety net — if pre-suspend rmmod fails, this clears the stale broken module before a clean reload
-  - Added 1s delay after modprobe before starting NetworkManager
-- **Deploy**: `sudo cp ~/Projects/linux-config/suspend-fix-t2.service /etc/systemd/system/ && sudo systemctl daemon-reload`
+S3 deep sleep working. Keyboard/trackpad, WiFi, audio, Touch Bar all resume cleanly. Took 5 iterations to get right.
+
+**Root cause**: T2 Macs require `apple-bce` (T2 bridge driver) and `brcmfmac` (WiFi) to be unloaded before suspend — otherwise the chip is unresponsive on resume. The tricky part was releasing all references to `brcmfmac` before `rmmod` could succeed.
+
+**v1**: Created `suspend-fix-t2.service` to stop NM and rmmod brcmfmac before sleep.
+- **Failed**: `rmmod brcmfmac` got "Resource temporarily unavailable" — NM held the device. Service reported success (all lines prefixed `-`) so `ExecStop` never ran on resume, leaving `apple-bce` unloaded → keyboard/trackpad dead.
+
+**v2**: Added `systemctl stop NetworkManager` explicitly before rmmod.
+- **Failed**: NM stop alone wasn't enough — device still held. WiFi went through suspend in broken state, `timed out waiting for txstatus` on resume. Touch Bar also dead (modules unmanaged).
+
+**v3**: Added `rfkill block wifi` + 1s delay before rmmod. Added Touch Bar modules (`hid_appletb_kbd`, `hid_appletb_bl`) + 2s resume delay for `apple-bce` to init.
+- **Result**: Keyboard/Touch Bar ✅. WiFi still failing — `wlan0` interface remained up after rfkill, holding a module refcount.
+
+**v4**: Added `ip link set wlan0 down` between rfkill and rmmod. Added `rmmod -f brcmfmac brcmfmac_wcc` on resume as safety net.
+- **Failed**: `rmmod` still got EBUSY. Diagnosed via journalctl: two bugs found — (1) `iwd` was never stopped (system uses iwd as WiFi backend, not wpa_supplicant — NM stop left iwd holding the device), (2) rmmod order was wrong (`brcmfmac` listed before `brcmfmac_wcc` which depends on it, so refcount was always 1).
+
+**v5**: Added `systemctl stop iwd` after NM. Replaced `rmmod -f brcmfmac brcmfmac_wcc` with `modprobe -r brcmfmac` (resolves dep order automatically). Added `systemctl start iwd` on resume before NM.
+- **Result**: ✅ Full resume. `PM: suspend entry (deep)` + `ACPI: PM: Waking up from system sleep state S3` confirmed in logs.
+
+**Known benign resume noise** (no action needed):
+- `hid-appletb-kbd: error -ENODEV: Failed to get backlight device` — timing race on BCE USB bus enumeration; Touch Bar works fine
+- `brcmfmac: timed out waiting for txstatus` — transient during WiFi firmware re-init, clears within seconds
+- `t2_ncm` DHCP failures — NM tries to activate the T2's internal NCM Ethernet (no DHCP server on it); harmless
 
 ---
 
-### Updated `suspend-fix-t2.service` to v3
+### Configured `gnome-keyring` and secured `gh` credentials
 
-- **What**: Rewrote suspend service to fix WiFi and Touch Bar not resuming after suspend
-- **Why**: v2's `rmmod brcmfmac` still failed ("Resource temporarily unavailable") despite stopping NetworkManager — the device wasn't fully released. WiFi chip was unresponsive on resume (`timed out waiting for txstatus`). Touch Bar also didn't resume.
-- **Changes in v3**:
-  - Added `rfkill block wifi` before rmmod to force-release the WiFi device
-  - Added 1s settle delay before rmmod
-  - Separate rmmod lines so one failure doesn't skip others
-  - Added Touch Bar modules (`hid_appletb_kbd`, `hid_appletb_bl`) — unloaded on suspend, reloaded on resume
-  - Added 2s delay on resume to let `apple-bce` initialize before reloading dependent modules
-  - Added `rfkill unblock wifi` on resume before reloading brcmfmac
-- **Deploy**: `sudo cp ~/Projects/linux-config/suspend-fix-t2.service /etc/systemd/system/ && sudo systemctl daemon-reload`
+- **What**: Installed `gnome-keyring`, autostarted via Hyprland `exec-once` with `--components=secrets` only. Re-ran `gh auth login` to move token from plaintext `hosts.yml` into the keyring.
+- **Why**: GitHub token was sitting in plaintext at `~/.config/gh/hosts.yml`
+- **Note**: `--components=secrets` only — `gpg-agent` handles SSH/GPG via socket activation; keyring ssh/gpg components would conflict
+
+---
+
+### Configured `hyprlock` + `hypridle`
+
+- **What**: Installed and configured Hyprland-native lock screen and idle daemon
+- **hyprlock**: Blurred screenshot background, centered clock + password input; bound to `Super+Shift+L`
+- **hypridle**: 2 min → dim screen; 3 min → lock; 10 min → suspend. Also locks before sleep via `before_sleep_cmd`
+- **Why**: No lock screen was a security gap; idle suspend also depended on this
+
+---
 
 ---
 
