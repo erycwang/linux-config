@@ -77,6 +77,12 @@ Gaps and planned changes to the current system setup, ordered by priority.
 
 **v4 fix (2026-03-15)**: Added `ip link set wlan0 down` between rfkill and rmmod to release the kernel interface reference. Also added `rmmod -f brcmfmac brcmfmac_wcc` on the resume side before `modprobe brcmfmac` as a safety net — if pre-suspend rmmod still fails, this clears the stale broken module before a clean reload. Added 1s delay after modprobe before starting NetworkManager.
 
+**v4 result (2026-03-15)**: `rmmod -f brcmfmac` still failed with "Resource temporarily unavailable". Two root causes found from journalctl:
+1. **`iwd` was never stopped** — the system uses `iwd` as the WiFi backend (not wpa_supplicant). NM was stopped but `iwd` kept a live reference on `brcmfmac`.
+2. **`rmmod` order was backwards** — listed `brcmfmac` before `brcmfmac_wcc`, but `brcmfmac_wcc` depends on `brcmfmac` (refcount = 1), so removal fails. Should use `modprobe -r brcmfmac` which resolves dep order automatically.
+
+**v5 fix (2026-03-15)**: Added `systemctl stop iwd` after stopping NM. Replaced `rmmod -f brcmfmac brcmfmac_wcc` with `modprobe -r brcmfmac` (handles dependency order: removes `brcmfmac_wcc` first, then `brcmfmac`). Added `systemctl start iwd` on the resume path before starting NM.
+
 ```ini
 [Unit]
 Description=Fix T2 suspend (unload apple-bce + WiFi modules)
@@ -88,10 +94,11 @@ User=root
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=-/usr/bin/systemctl stop NetworkManager
+ExecStart=-/usr/bin/systemctl stop iwd
 ExecStart=-/usr/bin/rfkill block wifi
 ExecStart=-/usr/bin/ip link set wlan0 down
 ExecStart=-/usr/bin/sleep 1
-ExecStart=-/usr/bin/rmmod -f brcmfmac brcmfmac_wcc
+ExecStart=-/usr/bin/modprobe -r brcmfmac
 ExecStart=-/usr/bin/rmmod -f hid_appletb_kbd hid_appletb_bl
 ExecStart=-/usr/bin/rmmod -f apple-bce
 ExecStop=/usr/bin/modprobe apple-bce
@@ -99,8 +106,10 @@ ExecStop=/usr/bin/sleep 2
 ExecStop=/usr/bin/modprobe hid_appletb_bl
 ExecStop=/usr/bin/modprobe hid_appletb_kbd
 ExecStop=/usr/bin/rfkill unblock wifi
-ExecStop=-/usr/bin/rmmod -f brcmfmac brcmfmac_wcc
+ExecStop=-/usr/bin/modprobe -r brcmfmac
 ExecStop=/usr/bin/modprobe brcmfmac
+ExecStop=/usr/bin/sleep 1
+ExecStop=/usr/bin/systemctl start iwd
 ExecStop=/usr/bin/sleep 1
 ExecStop=/usr/bin/systemctl start NetworkManager
 
@@ -226,7 +235,7 @@ The [ArchWiki](https://wiki.archlinux.org/title/Mac/Troubleshooting) suggests ad
 |---|---|---|
 | Keyring daemon (gnome-keyring) | 🔴 High | Not started — gh token in plaintext |
 | Lock screen (hyprlock + hypridle) | 🔴 High | Not started |
-| Suspend (test + configure) | 🔴 High | Fix 2 v4 deployed (keyboard ✅, WiFi testing) |
+| Suspend (test + configure) | 🔴 High | Fix 2 v5 deployed (keyboard ✅, WiFi testing) |
 | Status bar (quickshell) | 🟠 Medium | Not started |
 | Notification daemon (mako) | 🟠 Medium | Not started |
 | Browser migration (Brave) | 🟡 Planned | Not started |
