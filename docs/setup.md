@@ -72,6 +72,12 @@
 | **GPG agent** | gpg-agent (systemd user socket activation; also handles SSH via gpg-agent-ssh.socket) |
 | **SSH agent** | gpg-agent (no separate ssh-agent; uses gpg-agent SSH emulation) |
 
+> **Note**: `SSH_AUTH_SOCK` is not automatically set in shell sessions — SSH auth will silently fail without it. Fix by adding to `~/.config/fish/config.fish`:
+> ```fish
+> set -x SSH_AUTH_SOCK (gpgconf --list-dirs agent-ssh-socket)
+> ```
+> Socket path: `/run/user/1000/gnupg/S.gpg-agent.ssh`
+
 ---
 
 ## User-space Utilities
