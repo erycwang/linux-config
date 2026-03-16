@@ -99,6 +99,25 @@ Recommended: `swayosd` — less wiring, handles all three use cases out of the b
 
 ---
 
+### Clipboard manager
+
+No clipboard history currently configured. `wl-clipboard` is installed but only provides basic copy/paste with no history.
+
+- Install `cliphist` — lightweight Wayland clipboard history daemon
+- Add to Hyprland autostart: `exec-once = wl-paste --type text --watch cliphist store`
+- Bind a key to open history picker: `bind = $mainMod, C, exec, cliphist list | wofi --dmenu | cliphist decode | wl-copy`
+
+---
+
+### Screenshot annotation
+
+No annotation tool configured. Useful for marking up screenshots before sharing.
+
+- Install `satty` — Wayland-native annotation tool (arrows, text, blur, shapes)
+- Optionally wire into a new keybind that captures then opens in satty: `hyprshot -m region -r | satty --filename -`
+
+---
+
 ### Wallpaper
 
 - Install `hyprpaper` (Hyprland-native) or `swww` (supports animated wallpapers)
@@ -133,6 +152,8 @@ Recommended: `swayosd` — less wiring, handles all three use cases out of the b
 | Browser migration (Brave) | 🟡 Planned | Not started |
 | Screenshot tool | 🟢 Nice to have | ✅ Done |
 | OSD / HUD bars (swayosd or wob) | 🟢 Nice to have | Not started |
+| Clipboard manager (cliphist) | 🟢 Nice to have | Not started |
+| Screenshot annotation (satty) | 🟢 Nice to have | Not started |
 | Wallpaper | 🟢 Nice to have | Not started |
 | Cleanup orphaned terminals | 🟢 Nice to have | Not started |
 | t2fanrd decision | 🟢 Nice to have | ✅ Done |
