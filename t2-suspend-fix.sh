@@ -39,19 +39,25 @@ case "$1" in
     post)
         # Reload apple-bce first — touch bar and keyboard depend on it
         modprobe apple-bce
-        sleep 1
+        udevadm settle
         modprobe hid_appletb_bl
         modprobe hid_appletb_kbd
 
-        # Reload WiFi
+        # Force PCIe re-enumeration of the WiFi chip.
+        # After a full unload, the BCM4364 gets stuck in D3cold on the
+        # second suspend cycle — MMIO reads return 0xffffffff and probe
+        # fails. Removing the PCI device and rescanning forces a clean
+        # power-on back to D0.
         rfkill unblock wifi
+        echo 1 > /sys/bus/pci/devices/0000:e5:00.0/remove 2>/dev/null
+        echo 1 > /sys/bus/pci/rescan
+        udevadm settle
         modprobe brcmfmac
         modprobe brcmfmac_wcc
 
         # Restart networking
-        sleep 1
+        udevadm settle
         systemctl start iwd
-        sleep 1
         systemctl start NetworkManager
         ;;
 esac
