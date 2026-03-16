@@ -33,21 +33,21 @@ Gaps and planned changes to the current system setup, ordered by priority.
 **Remaining items**:
 - [x] Lid close triggers suspend, lid open resumes
 - [~] No spurious immediate wakeups (`XHC1`/`ARPT` ACPI wakeup sources) — not observed in practice, not doing
-- [ ] Reduce suspend/resume latency — current overhead is ~10s (2.9s pre-suspend + 7.2s resume). Most of the resume time is fixed sleeps (4s total). Replace `sleep` calls with `udevadm settle` to wait only as long as needed. See `docs/suspend-latency.csv` for measurements.
-- [ ] Replace `sleep 2` after `modprobe apple-bce` in `suspend-fix-t2.service` with `udevadm settle --timeout=5` — waits for udev to finish enumerating T2 devices instead of fixed delay, potentially faster resume. Needs testing to confirm touch bar/keyboard still come back reliably.
+- [x] Reduce suspend/resume latency — replaced all fixed sleeps with `udevadm settle` in v8. See `changes.md`.
+- [~] Replace `sleep 2` after `modprobe apple-bce` with `udevadm settle --timeout=5` — not doing; apple-bce triggers async USB enumeration so `udevadm settle` returns immediately. Fixed sleep is required.
 
 ---
 
 ## Priority 2 — Usability (important gaps)
 
-### Status bar (quickshell)
+### Status bar (quickshell) — in progress
 
-**No status bar installed.** No visibility into workspaces, time, battery, network, etc.
+**Plan**: See `quickshell/PLAN.md` for architecture and phased build plan.
 
-- Install `quickshell` (AUR: `quickshell-git`)
-- Write a QML config (quickshell uses QML/JS — significantly more powerful than waybar but more setup work)
-- Minimum viable bar: workspaces, clock, battery, network indicator, volume
-- Wire into Hyprland config
+- [x] Install `quickshell`
+- [ ] Phase 1: Minimal bar (workspaces + clock)
+- [ ] Phase 2: System info (battery, volume, network)
+- [ ] Phase 3: Tray + polish
 
 **Notes on quickshell**: It's newer and less documented than waybar. If the QML config becomes a blocker, waybar is a well-trodden fallback that can be swapped out later.
 
@@ -137,6 +137,16 @@ Switching only requires changing the DM — UWSM, Hyprland config, and all autos
 
 ---
 
+### Migrate suspend fix from service to sleep hook
+
+`suspend-fix-t2.service` (systemd `Before=sleep.target` service) works but is complex. `t2-suspend-fix.sh` (sleep hook in `/etc/systemd/system-sleep/`) is simpler — runs as a direct subprocess of `systemd-sleep`, after all unit ordering is done.
+
+- Port v8 changes (udevadm settle, PCI remove/rescan) to `t2-suspend-fix.sh`
+- Test suspend/resume cycle reliability
+- Deploy hook, disable service
+
+---
+
 ### Cleanup orphaned terminals
 
 - Kitty and Alacritty are installed but unused (Ghostty is primary)
@@ -158,14 +168,15 @@ Switching only requires changing the DM — UWSM, Hyprland config, and all autos
 |---|---|---|
 | Keyring daemon (gnome-keyring) | 🟢 Done | ✅ Token in keyring, hosts.yml clean |
 | Lock screen (hyprlock + hypridle) | 🟢 Done | ✅ hyprlock + hypridle configured |
-| Suspend (test + configure) | 🟢 Done | Fix 2 v5 — keyboard ✅, WiFi ✅, audio ✅, Touch Bar ✅, lid close ✅ |
-| Status bar (quickshell) | 🟠 Medium | Not started |
+| Suspend (test + configure) | 🟢 Done | v8 — all sleeps replaced with udevadm settle, full resume working |
+| Status bar (quickshell) | 🟠 Medium | In progress — see `quickshell/PLAN.md` |
 | Notification daemon (mako) | 🟠 Medium | Not started |
 | Browser migration (Brave) | 🟡 Planned | Not started |
 | Screenshot tool | 🟢 Nice to have | ✅ Done |
 | OSD / HUD bars (swayosd or wob) | 🟢 Nice to have | Not started |
 | Clipboard manager (cliphist) | 🟢 Nice to have | Not started |
 | Screenshot annotation (satty) | 🟢 Nice to have | Not started |
+| Suspend hook migration | 🟢 Nice to have | Not started — migrate service to sleep hook |
 | Display manager migration (greetd) | ⚪ Optional | Not started — see display-manager-architecture.md |
 | Wallpaper | 🟢 Nice to have | Not started |
 | Cleanup orphaned terminals | 🟢 Nice to have | Not started |

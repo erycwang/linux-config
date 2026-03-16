@@ -41,9 +41,13 @@ case "$1" in
         ;;
 
     post)
-        # Reload apple-bce first — touch bar and keyboard depend on it
+        # Reload apple-bce first — touch bar and keyboard depend on it.
+        # sleep 2 is required here — apple-bce triggers USB enumeration
+        # asynchronously, so udevadm settle returns immediately (no events
+        # queued yet). Without the delay, hid_appletb drivers load before
+        # the Touch Bar USB devices exist.
         modprobe apple-bce
-        udevadm settle
+        sleep 2
         modprobe hid_appletb_bl
         modprobe hid_appletb_kbd
 

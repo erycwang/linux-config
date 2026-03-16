@@ -39,6 +39,18 @@ journalctl -b -u NetworkManager --no-pager
 - `registered new interface driver brcmfmac` with **no** `enabling device` or firmware version after it — module loaded but no PCI device present to probe
 - iwd showing only `Network configuration is disabled` with no `Wiphy:` line — no WiFi hardware visible
 
+## `udevadm settle` vs `sleep` after modprobe
+
+`udevadm settle` waits until all pending udev events are processed — useful for waiting on hardware init after modprobe or PCI rescan. But it only works when the operation queues events synchronously.
+
+**Works with `udevadm settle`:**
+- `modprobe brcmfmac` — firmware load is synchronous, udev events fire before modprobe returns
+- `echo 1 > /sys/bus/pci/rescan` — PCI enumeration queues events synchronously
+- `ip link set ... down`, `rfkill block` — state changes queue events immediately
+
+**Requires fixed `sleep`:**
+- `modprobe apple-bce` — triggers USB enumeration asynchronously through the T2 virtual USB bus. The modprobe returns after the kernel module loads and the handshake completes, but USB devices (keyboard, trackpad, Touch Bar) enumerate over ~2 seconds afterward. `udevadm settle` returns immediately because no events are queued yet.
+
 ## hyprpolkitagent
 
 A polkit authentication agent — provides GUI prompts when an app requests elevated privileges (e.g. package installs, system changes).

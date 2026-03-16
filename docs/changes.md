@@ -6,6 +6,26 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-16
 
+### Suspend fix finalized — `suspend-fix-t2.service` v8
+
+Replaced all 5 fixed `sleep` calls (7s total) with `udevadm settle`, which blocks only until pending udev events are processed. Also removed the sleep between `iwd` and NetworkManager start since `systemctl start` is synchronous.
+
+**Exception — `sleep 2` after `modprobe apple-bce` must stay**: Apple-bce triggers USB enumeration asynchronously on the T2's virtual USB bus. `udevadm settle` returns immediately because the events haven't been queued yet. Without the sleep, the Touch Bar devices don't exist when `modprobe hid_appletb_bl/kbd` runs, breaking keyboard/trackpad on resume.
+
+**Lesson learned**: `udevadm settle` only works when the preceding operation queues udev events synchronously (PCI rescan, modprobe brcmfmac). For async USB enumeration (apple-bce), a fixed sleep is required.
+
+Also added suspend/resume WiFi debugging commands to `knowledge-base.md`.
+
+---
+
+### Installed `quickshell` + symlinked to config
+
+- Installed `quickshell` from extra (v0.2.1 — stable, avoids AUR rebuild issues on Qt updates)
+- Created `~/.config/quickshell` symlinked to `quickshell/` in this repo
+- Created `quickshell/PLAN.md` with three-tier architecture and phased build plan for status bar (workspaces, clock, system info, tray)
+
+---
+
 ### Suspend fix updated — `suspend-fix-t2.service` v7
 
 Fixed WiFi not recovering after first resume. After v6 properly unloaded brcmfmac, the PCIe device (`0000:e5:00.0`) would get stuck in D3cold during S3 — on resume, `modprobe brcmfmac` failed with `Unable to change power state from D3cold to D0, device inaccessible` and MMIO reads returned `0xffffffff`.
