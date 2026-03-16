@@ -31,6 +31,10 @@ case "$1" in
         modprobe -r brcmfmac_wcc
         modprobe -r brcmfmac
 
+        # Remove WiFi PCI device from sysfs so the kernel doesn't put it
+        # into D3cold during S3 — otherwise it can't power back to D0
+        echo 1 > /sys/bus/pci/devices/0000:e5:00.0/remove 2>/dev/null
+
         # Remove touch bar and apple-bce modules
         rmmod hid_appletb_kbd hid_appletb_bl
         rmmod apple-bce
@@ -43,13 +47,8 @@ case "$1" in
         modprobe hid_appletb_bl
         modprobe hid_appletb_kbd
 
-        # Force PCIe re-enumeration of the WiFi chip.
-        # After a full unload, the BCM4364 gets stuck in D3cold on the
-        # second suspend cycle — MMIO reads return 0xffffffff and probe
-        # fails. Removing the PCI device and rescanning forces a clean
-        # power-on back to D0.
+        # Rescan PCIe bus to rediscover the WiFi chip (removed in pre)
         rfkill unblock wifi
-        echo 1 > /sys/bus/pci/devices/0000:e5:00.0/remove 2>/dev/null
         echo 1 > /sys/bus/pci/rescan
         udevadm settle
         modprobe brcmfmac

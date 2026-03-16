@@ -6,6 +6,18 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-16
 
+### Suspend fix updated — `suspend-fix-t2.service` v7
+
+Fixed WiFi not recovering after first resume. After v6 properly unloaded brcmfmac, the PCIe device (`0000:e5:00.0`) would get stuck in D3cold during S3 — on resume, `modprobe brcmfmac` failed with `Unable to change power state from D3cold to D0, device inaccessible` and MMIO reads returned `0xffffffff`.
+
+**Fix**: Remove the WiFi PCI device from sysfs (`echo 1 > .../remove`) **before** suspend so the kernel's PCI power management doesn't touch it. On resume, `echo 1 > /sys/bus/pci/rescan` rediscovers the device in a clean power state and brcmfmac probes successfully.
+
+**Latency**: Pre-suspend ~2.9s, resume ~7.2s (~10s total overhead). See `docs/suspend-latency.csv` for measurements. Fixed sleeps are the main bottleneck — replacing with `udevadm settle` is next.
+
+Applied the same fix to `t2-suspend-fix.sh` (sleep hook, not yet deployed).
+
+---
+
 ### Suspend fix updated — `suspend-fix-t2.service` v6
 
 Added `modprobe -r brcmfmac_wcc` before `modprobe -r brcmfmac` in the pre-suspend sequence.

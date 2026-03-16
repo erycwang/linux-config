@@ -33,6 +33,7 @@ Gaps and planned changes to the current system setup, ordered by priority.
 **Remaining items**:
 - [x] Lid close triggers suspend, lid open resumes
 - [~] No spurious immediate wakeups (`XHC1`/`ARPT` ACPI wakeup sources) — not observed in practice, not doing
+- [ ] Reduce suspend/resume latency — current overhead is ~10s (2.9s pre-suspend + 7.2s resume). Most of the resume time is fixed sleeps (4s total). Replace `sleep` calls with `udevadm settle` to wait only as long as needed. See `docs/suspend-latency.csv` for measurements.
 - [ ] Replace `sleep 2` after `modprobe apple-bce` in `suspend-fix-t2.service` with `udevadm settle --timeout=5` — waits for udev to finish enumerating T2 devices instead of fixed delay, potentially faster resume. Needs testing to confirm touch bar/keyboard still come back reliably.
 
 ---
