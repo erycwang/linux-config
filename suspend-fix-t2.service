@@ -1,0 +1,18 @@
+[Unit]
+Description=Fix T2 suspend (unload apple-bce + WiFi modules)
+Before=sleep.target
+StopWhenUnneeded=yes
+
+[Service]
+User=root
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=-/usr/bin/systemctl stop NetworkManager
+ExecStart=-/usr/bin/rmmod brcmfmac_wcc brcmfmac
+ExecStart=-/usr/bin/rmmod -f apple-bce
+ExecStop=/usr/bin/modprobe apple-bce
+ExecStop=/usr/bin/modprobe brcmfmac
+ExecStop=/usr/bin/systemctl start NetworkManager
+
+[Install]
+WantedBy=sleep.target

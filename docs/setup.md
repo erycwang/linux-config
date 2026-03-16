@@ -30,7 +30,8 @@
 | **Networking** | iwd (WiFi), NetworkManager |
 | **Bluetooth** | bluetooth daemon |
 | **Power management** | power-profiles-daemon |
-| **Fan control (T2)** | t2fanrd (installed, currently disabled) |
+| **Suspend (T2)** | suspend-fix-t2.service (unloads apple-bce + brcmfmac around sleep, stops/starts NetworkManager; s2idle mode) |
+| **Fan control (T2)** | t2fanrd (enabled, active) |
 | **Storage optimization** | Snapper (BTRFS snapshots, configured for root) |
 
 ---
@@ -54,6 +55,7 @@
 | **Status bar** | — | Not installed |
 | **App launcher** | wofi | ✅ |
 | **Notifications** | — | Not installed |
+| **Screenshot** | hyprshot | ✅ |
 | **Wallpaper** | — | Using Hyprland default |
 | **Screen lock** | — | Not installed |
 | **Idle/suspend daemon** | kidletime (installed, unused) | Not configured |
@@ -68,7 +70,7 @@
 |---|---|
 | **Terminal** | Ghostty (primary) |
 | **Shell** | Fish (with cachyos-fish-config) |
-| **Editor** | Neovim |
+| **Editor** | Neovim (plugins: markview.nvim) |
 | **File manager** | Dolphin |
 | **Browser** | Firefox (primary; planning to switch to Brave w/ keyring) |
 | **AUR helper** | Paru |
@@ -90,5 +92,3 @@
 - Terminal set to `ghostty`, file manager `dolphin`, launcher `wofi`, browser `firefox` in Hyprland config
 - `kidletime` (KDE idle detection library) is installed but not actively managing idle/suspend
 - Kitty and Alacritty are installed but likely leftovers (Ghostty is the primary terminal)
-- **t2fanrd status**: Installed but currently disabled. Enable with `systemctl enable --now t2fanrd` if you want active fan control.
-- **hyprpolkitagent**: Runs successfully from `/usr/local/libexec/hyprpolkitagent` (non-standard PATH location)
