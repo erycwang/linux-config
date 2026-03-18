@@ -16,7 +16,7 @@ Variants {
         }
 
         implicitHeight: Config.barHeight
-        color: "#1e1e2e"
+        color: Qt.rgba(0x1e/255, 0x1e/255, 0x2e/255, 0.95)
 
         Bar { screen: modelData }
     }

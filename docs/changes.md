@@ -6,6 +6,17 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-18
 
+### quickshell bar — WiFi widget, battery charging color, transparency, separator
+
+- **WiFi widget**: Added `services/Wifi.qml` — polls `nmcli -t -f active,ssid,signal dev wifi` every 30s via `Quickshell.Io.Process`. Exposes `ssid`, `signal`, `connected` properties.
+- **WiFi display**: `widgets/Wifi.qml` shows `▂▄▆█ SSID` with signal bars (thresholds at 25/50/75/90%), `xxxx NO NETWORK` in red when disconnected. SSID capped at 12 chars.
+- **Separator widget**: Added `widgets/Separator.qml` — reusable `|` divider, use `Separator {}` between any widgets.
+- **Battery charging color**: Battery text turns green (`#a6e3a1`) when charging, replacing the previous white/lavender.
+- **Bar transparency**: `BarWrapper.qml` background set to 95% opacity via `Qt.rgba()` (hex colors don't support alpha readably).
+- **eDP-1 scale**: Adjusted from 1.6 → 1.33 in `hyprland.conf`.
+
+---
+
 ### Added `hyprctl reload` keybind + documented symlink config issue
 
 - Hypr configs (`hyprland.conf`, `hypridle.conf`, `hyprlock.conf`) are symlinked from `~/.config/hypr/` to this repo

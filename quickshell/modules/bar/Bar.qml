@@ -29,6 +29,8 @@ Item {
         anchors.rightMargin: Config.padding
         anchors.verticalCenter: parent.verticalCenter
         spacing: Config.spacing
+        Wifi {}
+        Separator {}
         Battery {}
     }
 }

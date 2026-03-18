@@ -1,1 +1,2 @@
 singleton Battery 1.0 Battery.qml
+singleton Wifi 1.0 Wifi.qml
