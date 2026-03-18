@@ -4,6 +4,28 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ---
 
+## 2026-03-18
+
+### Added `hyprctl reload` keybind + documented symlink config issue
+
+- Hypr configs (`hyprland.conf`, `hypridle.conf`, `hyprlock.conf`) are symlinked from `~/.config/hypr/` to this repo
+- Hyprland's inotify-based config watcher doesn't detect changes through symlinks, so auto-reload stopped working
+- Fixed upstream in [hyprwm/Hyprland#9219](https://github.com/hyprwm/Hyprland/pull/9219) (merged 2025-01-31), but still not working on v0.54.2
+- Added `Super+Shift+]` → `hyprctl reload` keybind as a manual workaround
+- Updated `docs/setup.md` notes section
+
+---
+
+### quickshell Phase 1 complete — bar with clock live
+
+- Built minimal status bar: `shell.qml` → `BarWrapper.qml` → `Bar.qml` → `widgets/Clock.qml`
+- Bar renders on all monitors via `Variants { model: Quickshell.screens }`, docked top with exclusion zone
+- Clock uses `SystemClock` (reactive, updates each minute) — no `new Date()` stale binding
+- Added `exec-once = quickshell` to `hyprland.conf` for autostart
+- Quickshell auto-discovers `~/.config/quickshell/shell.qml` (symlinked from this repo)
+
+---
+
 ## 2026-03-16
 
 ### Suspend fix finalized — `suspend-fix-t2.service` v8

@@ -45,9 +45,11 @@ Gaps and planned changes to the current system setup, ordered by priority.
 **Plan**: See `quickshell/PLAN.md` for architecture and phased build plan.
 
 - [x] Install `quickshell`
-- [ ] Phase 1: Minimal bar (workspaces + clock)
-- [ ] Phase 2: System info (battery, volume, network)
-- [ ] Phase 3: Tray + polish
+- [x] Phase 1: Minimal bar with clock — bar renders on all monitors, clock ticks, `exec-once = quickshell` in Hyprland
+- [x] Phase 2: Workspaces + layout structure
+- [ ] Phase 3: System info (battery, volume, network)
+- [ ] Phase 4: Tray + polish
+- [ ] Phase 5: Theme switcher
 
 **Notes on quickshell**: It's newer and less documented than waybar. If the QML config becomes a blocker, waybar is a well-trodden fallback that can be swapped out later.
 
@@ -120,6 +122,18 @@ No annotation tool configured. Useful for marking up screenshots before sharing.
 
 ---
 
+### Multi-monitor workspace strategy — not decided
+
+Hyprland workspaces are global by default: switching to workspace 3 from monitor 2 pulls it onto monitor 2, even if it was on monitor 1. Options to investigate:
+
+- **Bind workspaces to monitors** in `hyprland.conf` (e.g. workspaces 1–5 on monitor 1, 6–9 on monitor 2) — simple, no plugins
+- **`split-monitor-workspaces` plugin** — each monitor gets independent 1–9, GNOME-like behavior
+- **Leave floating** — current behavior, workspaces follow focus
+
+Decide based on actual usage: do workspace numbers jumping between monitors feel disorienting?
+
+---
+
 ### Display manager migration (optional)
 
 Current stack: SDDM → UWSM → Hyprland. SDDM still spawns an Xorg process for its greeter even in Wayland mode (invisible with autologin, but not purely Wayland).
@@ -169,7 +183,8 @@ Switching only requires changing the DM — UWSM, Hyprland config, and all autos
 | Keyring daemon (gnome-keyring) | 🟢 Done | ✅ Token in keyring, hosts.yml clean |
 | Lock screen (hyprlock + hypridle) | 🟢 Done | ✅ hyprlock + hypridle configured |
 | Suspend (test + configure) | 🟢 Done | v8 — all sleeps replaced with udevadm settle, full resume working |
-| Status bar (quickshell) | 🟠 Medium | In progress — see `quickshell/PLAN.md` |
+| Status bar (quickshell) | 🟠 Medium | Phase 2 done — workspaces + layout + multi-monitor. Phase 3 next. |
+| Multi-monitor workspace strategy | ⚪ Optional | Not decided — bind to monitors, plugin, or leave floating |
 | Notification daemon (mako) | 🟠 Medium | Not started |
 | Browser migration (Brave) | 🟡 Planned | Not started |
 | Screenshot tool | 🟢 Nice to have | ✅ Done |

@@ -104,6 +104,7 @@
 
 ## Notes
 
+- Hypr configs (`hyprland.conf`, `hypridle.conf`, `hyprlock.conf`) are symlinked from `~/.config/hypr/` to this repo. Hyprland's inotify-based config watcher does not detect changes through symlinks, so auto-reload stopped working. Fixed upstream in [hyprwm/Hyprland#9219](https://github.com/hyprwm/Hyprland/pull/9219) (merged 2025-01-31). If still broken, use `Super+Shift+]` to manually reload (`hyprctl reload`).
 - Monitors configured in `hyprland.conf`: `eDP-1` (internal, 1.07x scale), `DP-2` (external, 1.2x scale, centered above)
 - Terminal set to `ghostty`, file manager `dolphin`, launcher `wofi`, browser `firefox` in Hyprland config
 - `kidletime` (KDE idle detection library) is installed but not actively managing idle/suspend

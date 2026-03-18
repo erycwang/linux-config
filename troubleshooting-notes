@@ -1,0 +1,88 @@
+# Troubleshooting Notes
+
+---
+
+## 2026-03-17 — Keyboard dead on lock + kernel panic on suspend
+
+### Symptoms
+- Physical keyboard unresponsive when hyprlock appeared before sleep
+- Machine rebooted instead of suspending (~08:40)
+
+### Root cause
+
+Two separate but related issues:
+
+**1. Kernel oops caused reboot**
+
+At 08:40:03, `suspend-fix-t2.service` ran `rmmod -f apple-bce` while pipewire still
+held an open ALSA PCM handle to the T2 audio device (`hw:0,0p`). Pipewire tried to
+call `snd_pcm_drop` to close the stream, but the MMIO region backing `apple-bce` was
+already unmapped, causing a page fault:
+
+  BUG: unable to handle page fault for address: ffffd0ac8654404c
+  Oops: 0002 [#1] SMP NOPTI
+  Tainted: [R]=FORCED_RMMOD, [C]=CRAP
+  RIP: iowrite32
+  Call trace: aaudio_pcm_trigger → aaudio_cmd_stop_io → __aaudio_send_cmd_sync
+
+The `aaudio` module (part of `apple_bce`) was not unloaded before `apple-bce` itself,
+so `rmmod -f` was required and caused the crash. speech-dispatcher had initialized a
+pipewire connection to the T2 audio device at 08:04 and left it open.
+
+**2. Keyboard dead during hyprlock**
+
+`hypridle`'s `before_sleep_cmd = pidof hyprlock || hyprlock` runs concurrently with
+`suspend-fix-t2.service` (both triggered at sleep.target). By the time hyprlock
+appeared on screen, `apple-bce` (keyboard driver) was already unloaded.
+
+### Fix
+
+**suspend-fix-t2.service** — unload `aaudio` before `apple-bce` so force-removal
+is not needed:
+
+  # Before (broken):
+  ExecStart=-/usr/bin/rmmod -f hid_appletb_kbd hid_appletb_bl
+  ExecStart=-/usr/bin/rmmod -f apple-bce
+
+  # After:
+  ExecStart=-/usr/bin/modprobe -r hid_appletb_kbd hid_appletb_bl
+  ExecStart=-/usr/bin/modprobe -r aaudio
+  ExecStart=-/usr/bin/modprobe -r apple-bce
+
+  # On resume, reload aaudio after apple-bce:
+  ExecStop=/usr/bin/modprobe apple-bce
+  ExecStop=/usr/bin/sleep 2
+  ExecStop=/usr/bin/modprobe aaudio
+  ExecStop=/usr/bin/modprobe hid_appletb_bl
+  ExecStop=/usr/bin/modprobe hid_appletb_kbd
+
+**~/.config/hypr/hypridle.conf** — remove `before_sleep_cmd` (races with keyboard
+unload); add hyprlock to `after_sleep_cmd` to lock on resume for early-suspend case:
+
+  # Before:
+  general {
+      lock_cmd = pidof hyprlock || hyprlock
+      before_sleep_cmd = pidof hyprlock || hyprlock
+      after_sleep_cmd = hyprctl dispatch dpms on
+  }
+
+  # After:
+  general {
+      lock_cmd = pidof hyprlock || hyprlock
+      after_sleep_cmd = hyprctl dispatch dpms on; pidof hyprlock || hyprlock
+  }
+
+  Normal idle path: hyprlock starts at 180s → keyboard still alive → suspend at
+  600s → on resume hyprlock is already showing.
+  Early suspend path: no pre-sleep lock, but locks immediately on resume.
+
+### Relevant log commands
+
+  # View the crash:
+  journalctl -b -1 --no-pager --since "2026-03-17 08:38:00" --until "2026-03-17 08:43:15" | grep -v UFW
+
+  # Check suspend-fix-t2 service status:
+  systemctl status suspend-fix-t2.service
+
+  # Watch pipewire clients before suspend:
+  pw-top
