@@ -7,18 +7,41 @@ RowLayout {
     property var screen  // ShellScreen passed from Bar
     spacing: 4
 
+    // Cache monitor lookup once for all delegates
+    property var monitor: Hyprland.monitorFor(screen)
+    property int activeWsId: monitor?.activeWorkspace?.id ?? -1
+
     Repeater {
         model: 9
         delegate: Rectangle {
             required property int index
             property int wsId: index + 1
-            property bool isActive: Hyprland.monitorFor(screen)?.activeWorkspace?.id === wsId
-            property bool isOnOtherMonitor: Hyprland.monitors.values.some(
-                m => m !== Hyprland.monitorFor(screen) && m.activeWorkspace?.id === wsId
-            )
-            // has windows but not currently displayed on any monitor
-            property bool hasOffscreenWindows: !isActive && !isOnOtherMonitor
-                && Hyprland.workspaces.values.some(ws => ws.id === wsId)
+            property bool isActive: activeWsId === wsId
+            property bool isOnOtherMonitor: {
+                var monitors = Hyprland.monitors.values
+                for (var i = 0; i < monitors.length; i++) {
+                    var m = monitors[i]
+                    if (m !== monitor && m.activeWorkspace?.id === wsId)
+                        return true
+                }
+                return false
+            }
+            // Has windows but not visible on any monitor — check monitors
+            // directly to avoid cascading from isActive/isOnOtherMonitor
+            property bool hasOffscreenWindows: {
+                var workspaces = Hyprland.workspaces.values
+                var exists = false
+                for (var i = 0; i < workspaces.length; i++) {
+                    if (workspaces[i].id === wsId) { exists = true; break }
+                }
+                if (!exists) return false
+                var monitors = Hyprland.monitors.values
+                for (var i = 0; i < monitors.length; i++) {
+                    if (monitors[i].activeWorkspace?.id === wsId)
+                        return false
+                }
+                return true
+            }
 
             width: 24
             height: 24
