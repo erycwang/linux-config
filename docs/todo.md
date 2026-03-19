@@ -59,6 +59,7 @@ Gaps and planned changes to the current system setup, ordered by priority.
 
 - `mako` installed, autostarted via `exec-once = mako` in Hyprland
 - Config at `mako/config` (symlinked to `~/.config/mako/config`): Catppuccin Mocha palette, 12px border radius, per-urgency rules (low → muted, normal → blue, high → red + no timeout)
+- [ ] Click-to-focus — clicking a notification should focus the window that triggered it (requires window ID passed via notify-send hint; mako on-button-left action)
 
 ---
 
@@ -195,6 +196,7 @@ Single source of truth for the color palette across all applications — change 
 | Status bar (quickshell) | 🟠 Medium | Phase 3 done — CPU, MEM, TEMP, battery, WiFi, Bluetooth live. Phase 4 (volume + tray) next. |
 | Multi-monitor workspace strategy | ⚪ Optional | Not decided — bind to monitors, plugin, or leave floating |
 | Notification daemon (mako) | 🟢 Done | ✅ mako installed and configured |
+| Notification click-to-focus | 🟠 Medium | Pending — mako on-button-left action + window ID hint |
 | Browser migration (Brave) | 🟡 Planned | Not started |
 | Screenshot tool | 🟢 Nice to have | ✅ Done |
 | OSD / HUD bars (swayosd) | 🟢 Done | ✅ swayosd installed, TokyoNight Moon themed |

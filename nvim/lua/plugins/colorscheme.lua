@@ -13,6 +13,5 @@ return {
     config = function()
 	vim.cmd("colorscheme gruvbox")
     end, 
-    opts = ...,
     },
 }

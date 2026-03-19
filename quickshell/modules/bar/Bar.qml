@@ -17,10 +17,13 @@ Item {
         Workspaces { screen: root.screen }
     }
 
-    // Center: clock (truly centered, unaffected by left/right widths)
+    // Center: clock + date (truly centered, unaffected by left/right widths)
     RowLayout {
         anchors.centerIn: parent
+        spacing: Config.spacing
         Clock {}
+        Separator {}
+        Date {}
     }
 
     // Right: system info

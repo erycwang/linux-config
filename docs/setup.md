@@ -52,9 +52,9 @@
 | Component | Setup | Status |
 |---|---|---|
 | **Window manager** | Hyprland | ✅ |
-| **Status bar** | — | Not installed |
+| **Status bar** | quickshell | Phase 3 done (CPU, MEM, TEMP, battery, WiFi, BT live). Phase 4 (volume + tray) next. |
 | **App launcher** | wofi | ✅ |
-| **Notifications** | — | Not installed |
+| **Notifications** | mako | ✅ top-right, 5s timeout, per-urgency rules |
 | **Screenshot** | hyprshot | ✅ |
 | **Wallpaper** | — | Using Hyprland default |
 | **Screen lock** | hyprlock | ✅ `Super+Shift+L`; blurred screenshot + clock |
@@ -86,9 +86,9 @@
 |---|---|
 | **Terminal** | Ghostty (primary) |
 | **Shell** | Fish (with cachyos-fish-config) |
-| **Editor** | Neovim (plugins: markview.nvim) |
+| **Editor** | Neovim (plugins: markview.nvim, transparent.nvim, wilder.nvim, telescope.nvim, colorscheme-persist.nvim) |
 | **File manager** | Dolphin |
-| **Browser** | Firefox (primary; planning to switch to Brave w/ keyring) |
+| **Browser** | Brave |
 | **AUR helper** | Paru |
 | **Firewall** | UFW |
 | **Process scheduler** | ananicy-cpp |
@@ -104,7 +104,7 @@
 
 ## Notes
 
-- Hypr configs (`hyprland.conf`, `hypridle.conf`, `hyprlock.conf`) are symlinked from `~/.config/hypr/` to this repo. Hyprland's inotify-based config watcher does not detect changes through symlinks, so auto-reload stopped working. Fixed upstream in [hyprwm/Hyprland#9219](https://github.com/hyprwm/Hyprland/pull/9219) (merged 2025-01-31). If still broken, use `Super+Shift+]` to manually reload (`hyprctl reload`).
+- Configs symlinked from `~/.config/` to this repo (repo is source of truth): `hypr/`, `nvim/`, `ghostty/`. Hyprland's inotify-based config watcher does not detect changes through symlinks, so auto-reload stopped working. Fixed upstream in [hyprwm/Hyprland#9219](https://github.com/hyprwm/Hyprland/pull/9219) (merged 2025-01-31). If still broken, use `Super+Shift+]` to manually reload (`hyprctl reload`).
 - Monitors configured in `hyprland.conf`: `eDP-1` (internal, 1.07x scale), `DP-2` (external, 1.2x scale, centered above)
 - Terminal set to `ghostty`, file manager `dolphin`, launcher `wofi`, browser `firefox` in Hyprland config
 - `kidletime` (KDE idle detection library) is installed but not actively managing idle/suspend

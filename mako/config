@@ -1,7 +1,7 @@
 sort=-time
 layer=overlay
 anchor=top-right
-margin=10
+margin=16,16,10,10
 padding=12,16
 width=320
 height=120

@@ -6,6 +6,50 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-18
 
+### mako — adjusted notification margin
+
+- Changed `margin` from `10` (uniform) to `16,16,10,10` (top, right, bottom, left)
+- Shifts notification slightly down and left (toward center) for visual separation from tiled windows
+- mako is launched via `exec-once = mako` in `hyprland.conf` — not via systemd unit (service is disabled by default; use `pkill mako && mako &` to restart manually)
+
+---
+
+### Config repo — symlinked nvim and ghostty to repo as source of truth
+
+- `~/.config/nvim` → `~/Projects/linux-config/nvim/` (symlink)
+- `~/.config/ghostty` → `~/Projects/linux-config/ghostty/` (symlink)
+- Same pattern as existing hypr symlinks — repo is source of truth, edit there and changes are live immediately
+
+---
+
+### Neovim — transparency, cmdline completion, relative line numbers
+
+- **transparent.nvim**: Clears Neovim's background highlight groups so terminal/compositor transparency shows through. `enable_on_startup = true`. Config at `~/.config/nvim/lua/plugins/transparent.lua`.
+- **wilder.nvim**: Fuzzy cmdline completion for `:`, `/`, `?` modes. Popup menu renderer. Config at `~/.config/nvim/lua/plugins/wilder.lua`.
+- **Relative line numbers**: `vim.opt.number = true` + `vim.opt.relativenumber = true` added to `init.lua` — hybrid mode (absolute on current line, relative on others).
+- Note: nvim config lives at `~/.config/nvim/` and is **not** symlinked to this repo — changes must be copied manually.
+
+---
+
+### Neovim colorscheme switching with Telescope and auto-persistence
+
+- Installed `colorscheme-persist.nvim` plugin — automatically saves selected colorscheme to disk on Telescope picker selection
+- Configured Telescope for lazy-loading with `lazy = false`
+- Added `nvim/lua/plugins/telescope.lua` for Telescope setup
+- Added `nvim/lua/plugins/colorscheme-persist.lua` — enables persistent theme switching without manual config edits
+- Backed up entire `~/.config/nvim` to `nvim/` directory in this repo
+- Workflow: `:Telescope colorscheme` → pick theme → automatic persistence across restarts
+
+---
+
+### Fixed Hyprland workspace navigation keybinds
+
+- Updated workspace navigation from `CTRL ALT + j/l` to `CTRL ALT + h/l` for consistency with vim keybind pattern (h=left, l=right)
+- Changed direction: `CTRL ALT + h` → previous workspace (-1), `CTRL ALT + l` → next workspace (+1)
+- Issue: Original bind syntax was correct but needed `hyprctl reload` to apply (Super+Shift+])
+
+---
+
 ### TokyoNight Moon theme applied across all components
 
 Replaced Catppuccin Mocha palette with TokyoNight Moon across the entire setup:
