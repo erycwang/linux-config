@@ -48,7 +48,7 @@ Gaps and planned changes to the current system setup, ordered by priority.
 - [x] Phase 1: Minimal bar with clock — bar renders on all monitors, clock ticks, `exec-once = quickshell` in Hyprland
 - [x] Phase 2: Workspaces + layout structure
 - [x] Phase 3: System info — CPU, MEM, TEMP, battery, WiFi, Bluetooth all live
-- [ ] Phase 4: Volume widget + tray + polish
+- [x] Phase 4: Volume widget + tray + polish
 - [ ] Phase 5: Theme switcher
 
 **Notes on quickshell**: It's newer and less documented than waybar. If the QML config becomes a blocker, waybar is a well-trodden fallback that can be swapped out later.
@@ -59,13 +59,12 @@ Gaps and planned changes to the current system setup, ordered by priority.
 
 - `mako` installed, autostarted via `exec-once = mako` in Hyprland
 - Config at `mako/config` (symlinked to `~/.config/mako/config`): Catppuccin Mocha palette, 12px border radius, per-urgency rules (low → muted, normal → blue, high → red + no timeout)
-- [ ] Click-to-focus — clicking a notification should focus the window that triggered it (requires window ID passed via notify-send hint; mako on-button-left action)
 
 ---
 
 ## Priority 3 — Planned changes
 
-### Browser migration: Firefox → Brave
+### Browser migration: Firefox → Brave ✅ Done
 
 - Already noted in `setup.md`
 - Install `brave-bin` (AUR)
@@ -89,6 +88,13 @@ Gaps and planned changes to the current system setup, ordered by priority.
 - `swayosd` installed from `extra` repo, `exec-once = swayosd-server` in Hyprland
 - Volume/brightness keybinds updated to use `swayosd-client` (keyboard brightness stays on `brightnessctl`)
 - Themed with TokyoNight Moon: `#222436` bg, `#82aaff` border + progress bar, config at `swayosd/style.css`
+
+---
+
+### Notification click-to-focus
+
+- Clicking a notification should focus the window that triggered it
+- Requires window ID passed via notify-send hint; mako `on-button-left` action to implement
 
 ---
 
@@ -132,7 +138,7 @@ Switching only requires changing the DM — UWSM, Hyprland config, and all autos
 
 ---
 
-### Wallpaper
+### Wallpaper ✅ Done
 
 - Install `hyprpaper` (Hyprland-native) or `swww` (supports animated wallpapers)
 - Currently using Hyprland default (solid color)
@@ -149,25 +155,13 @@ Switching only requires changing the DM — UWSM, Hyprland config, and all autos
 
 ---
 
-### Unified theming
+### Unified theming ✅ Done (colors)
 
 Single source of truth for the color palette across all applications — change one file, everything updates.
 
 **Applications to cover**: Hyprland borders, quickshell bar, mako, hyprlock, wofi, Ghostty, Neovim, possibly GTK/Qt apps.
 
-**Approach options**:
-- **`pywal` / `wal`** — generates theme files from a wallpaper or a base palette; has templates for most apps but requires wallpaper-driven workflow
-- **Manual base palette file** — single `theme.conf` or `colors.sh` sourced/imported by each app's config; full control, no magic
-- **`matugen`** — Material You palette generator, Hyprland ecosystem native, can output to multiple formats
-
-**Likely approach**: Define palette once in a central file (`theme/colors`), write per-app template scripts that read it and write out each app's config format. Or use `matugen` if wallpaper-driven theming is desired.
-
-**Scope**:
-- [ ] Decide: static palette file vs wallpaper-driven (pywal/matugen)
-- [ ] Wire up: Hyprland, quickshell, mako, hyprlock, wofi
-- [ ] Wire up: Ghostty terminal colors
-- [ ] Wire up: Neovim colorscheme (catppuccin already installed)
-- [ ] Optional: GTK theme (`nwg-look` or `gradience`)
+**Completed**: Color palette defined and applied across Hyprland, quickshell, mako, swayosd, hyprlock (TokyoNight Moon theme)
 
 ---
 
@@ -193,18 +187,18 @@ Single source of truth for the color palette across all applications — change 
 | Keyring daemon (gnome-keyring) | 🟢 Done | ✅ Token in keyring, hosts.yml clean |
 | Lock screen (hyprlock + hypridle) | 🟢 Done | ✅ hyprlock + hypridle configured |
 | Suspend (test + configure) | 🟢 Done | v8 — all sleeps replaced with udevadm settle, full resume working |
-| Status bar (quickshell) | 🟠 Medium | Phase 3 done — CPU, MEM, TEMP, battery, WiFi, Bluetooth live. Phase 4 (volume + tray) next. |
-| Multi-monitor workspace strategy | ⚪ Optional | Not decided — bind to monitors, plugin, or leave floating |
+| Status bar (quickshell) | 🟢 Done | ✅ Phases 1-4 complete — clock, workspaces, weather, system info, battery, WiFi, Bluetooth live |
 | Notification daemon (mako) | 🟢 Done | ✅ mako installed and configured |
-| Notification click-to-focus | 🟠 Medium | Pending — mako on-button-left action + window ID hint |
-| Browser migration (Brave) | 🟡 Planned | Not started |
-| Screenshot tool | 🟢 Nice to have | ✅ Done |
+| Screenshot tool | 🟢 Done | ✅ Done |
 | OSD / HUD bars (swayosd) | 🟢 Done | ✅ swayosd installed, TokyoNight Moon themed |
 | Clipboard manager (cliphist) | 🟢 Nice to have | Not started |
 | Screenshot annotation (satty) | 🟢 Done | ✅ satty installed, Super+Shift+A to annotate clipboard |
+| Notification click-to-focus | 🟢 Nice to have | Pending — mako on-button-left action + window ID hint |
 | Suspend hook migration | 🟢 Nice to have | Not started — migrate service to sleep hook |
 | Display manager migration (greetd) | ⚪ Optional | Not started — see display-manager-architecture.md |
-| Wallpaper | 🟢 Nice to have | Not started |
-| Unified theming | ⚪ Optional | Not started — single palette source for all apps |
+| Multi-monitor workspace strategy | ⚪ Optional | Not decided — bind to monitors, plugin, or leave floating |
+| Browser migration (Brave) | 🟢 Done | ✅ Done |
+| Wallpaper | 🟢 Done | ✅ Done |
+| Unified theming | 🟢 Done | ✅ Done — TokyoNight Moon applied |
 | Cleanup orphaned terminals | 🟢 Nice to have | Not started |
 | t2fanrd decision | 🟢 Nice to have | ✅ Done |

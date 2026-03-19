@@ -1,0 +1,3 @@
+#!/bin/sh
+# Change to the directory if provided, otherwise use current directory
+cd "${1:-.}" && exec ghostty -e fish -c "yazi"

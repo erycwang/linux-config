@@ -4,6 +4,44 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ---
 
+## 2026-03-19
+
+### Hyprland — inactive opacity exclusion for Brave
+
+- Added `windowrule = opacity 1.0 override 1.0 override 1.0, match:class brave-browser` to exempt Brave from the global `inactive_opacity = 0.88`
+- Uses inline `windowrule =` format (not block syntax) — the wiki's opacity examples use this format and the block syntax `opacity =` did not apply the override correctly
+- `override` keyword bypasses the global decoration opacity product; without it the values multiply (e.g. `1.0 * 0.88 = 0.88`)
+- Window class is `brave-browser` (not `brave`) — also corrected the existing `brave-save` windowrule which had the wrong class
+
+---
+
+### Hyprland — windowrule for Brave save dialogs
+
+- Added windowrule `brave-save` to float Brave's native save/permission dialogs (`class: brave`, title matching `.*wants to save.*`)
+- Brave uses two window classes: `brave-browser` for tabs, `brave` for native dialogs
+- Brave opens file managers via DBus (`org.freedesktop.FileManager1.ShowItems`) directly — `xdg-mime` settings have no effect on this
+- Key lesson: `match:title` uses regex not glob — `*foo*` is invalid, use `.*foo.*`
+
+---
+
+### quickshell bar — Weather widget with city name
+
+- **City name**: Added `city` property to `Weather.qml` service — fetches from `wttr.in/?format=%l` (plain text, separate request) before the main `j1` JSON fetch; city is injected into jq via `--arg` and returned in the same `|`-delimited output
+- **Why separate request**: `wttr.in/?format=j1` doesn't include `nearest_area` when using IP-based auto-detection (only `current_condition`, `request`, `weather` keys); `%l` is the only way to get a human-readable city name
+- **Delimiter change**: Parser switched from space to `|` — city names can contain spaces
+- **Widget**: City displayed after temperature in muted color; hidden when `Weather.city` is empty
+
+### quickshell bar — Weather widget with suspend/wake detection
+
+- **Weather service**: `services/Weather.qml` fetches weather from wttr.in (auto-detects location via IP), parses temp & weather code via `jq`
+- **Weather widget**: `widgets/Weather.qml` displays Nerd Font weather icon (accent color when valid) + temperature in °C; fallback to muted cloud + `--°` when offline
+- **Suspend/wake detection**: Added dual-timer system — fast 60s heartbeat detects time jumps > 2 min (indicating wake from suspend) and triggers immediate refresh; 15-min regular refresh cycle maintains updates while awake
+- **Weather code mapping**: 26 wttr.in weather codes → Nerd Font icons (sunny, cloudy, rainy, snowy, fog, thunderstorm)
+- **Prerequisites**: `jq` for JSON parsing (install: `sudo pacman -S jq`)
+- **Bar position**: First item in right section (before CPU) with separator
+
+---
+
 ## 2026-03-18
 
 ### libinput — T2 touchpad palm rejection tuning

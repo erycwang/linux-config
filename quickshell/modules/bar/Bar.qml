@@ -32,6 +32,8 @@ Item {
         anchors.rightMargin: Config.padding
         anchors.verticalCenter: parent.verticalCenter
         spacing: Config.spacing
+        Weather {}
+        Separator {}
         Cpu {}
         Separator {}
         Mem {}

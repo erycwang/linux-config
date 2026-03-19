@@ -3,3 +3,4 @@ singleton Wifi 1.0 Wifi.qml
 singleton Cpu 1.0 Cpu.qml
 singleton Mem 1.0 Mem.qml
 singleton Temp 1.0 Temp.qml
+singleton Weather 1.0 Weather.qml

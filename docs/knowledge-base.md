@@ -51,6 +51,32 @@ journalctl -b -u NetworkManager --no-pager
 **Requires fixed `sleep`:**
 - `modprobe apple-bce` — triggers USB enumeration asynchronously through the T2 virtual USB bus. The modprobe returns after the kernel module loads and the handshake completes, but USB devices (keyboard, trackpad, Touch Bar) enumerate over ~2 seconds afterward. `udevadm settle` returns immediately because no events are queued yet.
 
+## Brave browser window management on Hyprland
+
+### How Brave opens file managers
+Brave does **not** use `xdg-open` for "Show in folder" — it uses the `org.freedesktop.FileManager1` DBus interface (`ShowItems` method) directly. On a system with Dolphin installed, Brave finds and calls Dolphin via DBus, bypassing `xdg-mime` settings entirely. Changing `xdg-mime default inode/directory` has no effect on this behavior.
+
+### Floating Brave dialogs with windowrules
+Brave uses two different window classes:
+- `brave-browser` — normal browser windows/tabs
+- `brave` — native dialogs (e.g. "site wants to save", permission prompts)
+
+To float the save/permission dialogs:
+```
+windowrule {
+    name = brave-save
+    match:class = ^(brave)$
+    match:title = .*wants to save.*
+
+    float = yes
+    center = yes
+    size = 600 400
+}
+```
+
+### Hyprland windowrule: regex not glob
+`match:title` and `match:class` use **regex**, not glob. `*foo*` is invalid — use `.*foo.*` for substring matching. Without anchors, Hyprland may or may not do partial matching depending on version — always use `.*` explicitly for safety.
+
 ## hyprpolkitagent
 
 A polkit authentication agent — provides GUI prompts when an app requests elevated privileges (e.g. package installs, system changes).

@@ -53,7 +53,7 @@
 | Component | Setup | Status |
 |---|---|---|
 | **Window manager** | Hyprland | ✅ |
-| **Status bar** | quickshell | Phase 3 done (CPU, MEM, TEMP, battery, WiFi, BT live). Phase 4 (volume + tray) next. |
+| **Status bar** | quickshell | Phase 3 done (weather + city, CPU, MEM, TEMP, battery, WiFi, BT live). Phase 4 (volume + tray) next. |
 | **App launcher** | wofi | ✅ |
 | **Notifications** | mako | ✅ top-right, 5s timeout, per-urgency rules |
 | **Screenshot** | hyprshot | ✅ |
@@ -73,11 +73,26 @@
 | **GPG agent** | gpg-agent (systemd user socket activation; also handles SSH via gpg-agent-ssh.socket) |
 | **SSH agent** | gpg-agent (no separate ssh-agent; uses gpg-agent SSH emulation) |
 
-> **Note**: `SSH_AUTH_SOCK` is not automatically set in shell sessions — SSH auth will silently fail without it. Fix by adding to `~/.config/fish/config.fish`:
+> **Note**: Shell config (`~/.config/fish/config.fish`) sets `EDITOR=ghostty` for Yazi and other TUI tools, and `SSH_AUTH_SOCK` to gpg-agent socket (required for SSH auth via gpg-agent).
 > ```fish
+> set -x EDITOR ghostty
 > set -x SSH_AUTH_SOCK (gpgconf --list-dirs agent-ssh-socket)
 > ```
-> Socket path: `/run/user/1000/gnupg/S.gpg-agent.ssh`
+
+---
+
+## Theming
+
+| Component | Setup |
+|---|---|
+| **Qt theme engine** | qt6ct (`QT_QPA_PLATFORMTHEME=qt6ct` in hyprland env) |
+| **Qt color scheme** | Gruvbox — `kde-gruvbox-git` installs to `/usr/share/color-schemes/`; copied to `~/.config/qt6ct/colors/` for qt6ct to pick up |
+| **GTK theme** | `gruvbox-dark-gtk` (AUR) — applied via `GTK_THEME=gruvbox-dark-gtk` env var in hyprland.conf and `gsettings set org.gnome.desktop.interface gtk-theme gruvbox-dark-gtk` |
+| **GTK config** | `~/.config/gtk-3.0/settings.ini` and `~/.config/gtk-4.0/settings.ini` set theme for apps not using gsettings |
+
+> **Note**: Brave's file picker dialog uses GTK directly (not xdg-desktop-portal-gtk). Theming it requires `GTK_THEME` env var — gsettings alone is insufficient because the env var takes priority and Brave must inherit it from Hyprland.
+>
+> **Note**: Brave uses two window classes — `brave-browser` for browser windows, `brave` for native OS dialogs. Hyprland windowrules must use `brave-browser` to target browser windows.
 
 ---
 
@@ -100,6 +115,27 @@
 
 - `ttf-meslo-nerd` — primary (Nerd Font, used in terminal)
 - `noto-fonts` + `noto-fonts-cjk` + `noto-fonts-emoji` — system-wide coverage
+
+---
+
+## File Manager Integration — Yazi in Ghostty
+
+When apps (like Brave) call "Show in folder", they use the `inode/directory` MIME type handler. To open folders in Yazi (running inside Ghostty) instead of the default file manager:
+
+1. **Copy the wrapper script and desktop file**:
+   ```bash
+   cp ~/Projects/linux-config/scripts/yazi-in-ghostty ~/.local/bin/
+   mkdir -p ~/.local/share/applications
+   cp ~/Projects/linux-config/scripts/yazi-custom.desktop ~/.local/share/applications/
+   chmod +x ~/.local/bin/yazi-in-ghostty
+   ```
+
+2. **Set as default MIME handler**:
+   ```bash
+   xdg-mime default yazi-custom.desktop inode/directory
+   ```
+
+**How it works**: The wrapper script (`yazi-in-ghostty`) changes to the provided directory, then launches `ghostty -e fish -c "yazi"`. The explicit Fish shell ensures your full environment (PATH, aliases, config) loads before yazi starts.
 
 ---
 
