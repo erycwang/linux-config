@@ -6,6 +6,19 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-18
 
+### libinput — T2 touchpad palm rejection tuning
+
+- Created `libinput/local-overrides.quirks` in repo
+- Increases `AttrPalmSizeThreshold` from 800 → 1600 (default too aggressive on T2, rejects normal finger taps)
+- Sets `AttrTouchSizeRange=50:30` for better touch size detection
+- Marks keyboard as `internal` so disable-while-typing works correctly
+- **Deploy**: `sudo cp ~/Projects/linux-config/libinput/local-overrides.quirks /etc/libinput/local-overrides.quirks`
+- **Verify**: `sudo libinput quirks list /dev/input/event7` — should show the new attrs
+- **Revert**: `sudo rm /etc/libinput/local-overrides.quirks` then log out/in
+- Takes effect on next login (no reboot needed)
+
+---
+
 ### mako — adjusted notification margin
 
 - Changed `margin` from `10` (uniform) to `16,16,10,10` (top, right, bottom, left)

@@ -1,0 +1,11 @@
+[Apple T2 Touchpad]
+MatchName=*Apple Inc. Apple Internal Keyboard / Trackpad*
+MatchUdevType=touchpad
+ModelAppleTouchpad=1
+AttrTouchSizeRange=50:30
+AttrPalmSizeThreshold=1600
+
+[Apple T2 Keyboard]
+MatchName=*Apple Inc. Apple Internal Keyboard / Trackpad*
+MatchUdevType=keyboard
+AttrKeyboardIntegration=internal

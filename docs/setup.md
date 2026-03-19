@@ -31,6 +31,7 @@
 | **Bluetooth** | bluetooth daemon |
 | **Power management** | power-profiles-daemon |
 | **Suspend (T2)** | suspend-fix-t2.service (unloads apple-bce, brcmfmac_wcc, brcmfmac, touch bar modules + iwd/NM around sleep; S3 deep sleep) |
+| **Touchpad (T2)** | libinput quirks at `/etc/libinput/local-overrides.quirks` — raises palm rejection threshold to 1600, tunes touch size range |
 | **Fan control (T2)** | t2fanrd (enabled, active) |
 | **Storage optimization** | Snapper (BTRFS snapshots, configured for root) |
 
