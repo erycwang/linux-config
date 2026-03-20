@@ -6,6 +6,54 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-19
 
+### Weather widget — icon fixes and full wttr.in code mapping
+
+- Fixed wrong Nerd Font codepoints: `\ue318` is `weather-rain` (not cloudy) — overcast/default now uses `\ue312` (`weather-cloudy`); `\ue314` is `weather-hail` (not light rain) — light rain now uses `\ue318`
+- Fixed fallback icon in `Weather.qml` widget from `\ue318` (rain) to `\ue312` (cloud)
+- Expanded `codeToIcon` to cover all wttr.in weather codes — previously missing: freezing rain, sleet, blowing snow, ice pellets, snow showers, rain showers, thunder variants
+- **Root cause found**: icons were wrong because `\ue318` was assumed to be cloudy but is actually rain in this Nerd Font version
+
+---
+
+### Hyprland — hypridle restarts on config reload
+
+- Changed `exec-once = hypridle` → `exec = pkill -x hypridle; hypridle &`
+- Matches the same pattern used for quickshell and hyprpaper — `hyprctl reload` now restarts hypridle, picking up config changes without a full Hyprland restart
+
+---
+
+### Hyprland — Super+V float toggle scales to monitor
+
+- `Super+V` now uses `resizeactive exact 50% 50%` instead of hardcoded `800 600`
+- Window floats at 50% of the current monitor's dimensions, centered
+- Also added state detection: if window is already floating, `Super+V` tiles it back and resets split ratio to 50/50 (`splitratio exact 1`)
+
+---
+
+### hyprlock — font updated to JetBrains Mono Nerd Font
+
+- Clock label font changed from `MesloLGM Nerd Font` to `JetBrainsMono Nerd Font` for consistency
+
+---
+
+### Hyprland — lid close disables internal display when external monitor is connected
+
+- Added `bindl` handlers for `switch:on:Lid Switch` and `switch:off:Lid Switch`
+- On lid close: checks if more than 1 monitor is active (`hyprctl monitors -j | jq length`); if so, disables `eDP-1` via `hyprctl keyword monitor eDP-1,disable` — this also migrates workspaces to the external monitor
+- On lid open: re-enables `eDP-1` with original settings (`preferred, auto, 1.25` scale)
+- Guard prevents disabling the display if no external monitor is connected
+
+---
+
+### Theming — Dolphin KDE color scheme
+
+- Changed `ColorScheme=Gruvbox` → `ColorScheme=GruvboxMaterialDark` in `~/.config/dolphinrc`
+- Points Dolphin's KDE-specific color roles (sidebar, headers, hover states) at `~/.local/share/color-schemes/GruvboxMaterialDark.colors` instead of `/usr/share/color-schemes/Gruvbox.colors`
+- **Why two layers**: Dolphin ignores qt6ct palette colors directly (known KDE bug). qt6ct handles the standard Qt palette; the KDE `.colors` file handles KDE-specific roles. Both now use the same Gruvbox Material Dark palette.
+- Restart Dolphin to apply.
+
+---
+
 ### Theming — Gruvbox Material Dark GTK + qt6ct color schemes
 
 - **GTK theme**: Switched from `gruvbox-dark-gtk` to `Gruvbox-Material-Dark` (AUR: `gruvbox-material-gtk-theme-git`). Updated `GTK_THEME` env var in `hyprland.conf`. Applies to Brave's file picker dialog and other GTK apps.

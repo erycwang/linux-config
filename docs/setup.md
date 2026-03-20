@@ -83,14 +83,32 @@
 
 ## Theming
 
+### Qt (qt6ct + Dolphin)
+
 | Component | Setup |
 |---|---|
-| **Qt theme engine** | qt6ct (`QT_QPA_PLATFORMTHEME=qt6ct` in hyprland env) |
-| **Qt color scheme** | `qt6ct/colors/` in repo — `Gruvbox.conf` (classic gruvbox) and `gruvbox-material-dark.conf`; deploy to `~/.config/qt6ct/colors/`. qt6ct requires `.conf` extension and QPalette ARGB format. |
-| **GTK theme** | `Gruvbox-Material-Dark` (AUR: `gruvbox-material-gtk-theme-git`) — applied via `GTK_THEME=Gruvbox-Material-Dark` env var in hyprland.conf |
-| **GTK config** | `~/.config/gtk-3.0/settings.ini` and `~/.config/gtk-4.0/settings.ini` set theme for apps not using gsettings |
+| **Qt theme engine** | qt6ct (`QT_QPA_PLATFORMTHEME=qt6ct` in hyprland.conf env) |
+| **Qt color scheme** | `qt6ct/colors/` in repo — `Gruvbox.conf` and `gruvbox-material-dark.conf`; deploy to `~/.config/qt6ct/colors/`. qt6ct requires `.conf` extension and QPalette ARGB format. |
+| **Dolphin KDE colors** | `~/.config/dolphinrc` → `ColorScheme=GruvboxMaterialDark` — points to `~/.local/share/color-schemes/GruvboxMaterialDark.colors`. Dolphin is a KDE app and uses KDE-specific color roles (sidebar, headers, hover states) on top of the Qt palette; these come from the `.colors` file, not qt6ct. |
 
-> **Note**: Brave's file picker dialog uses GTK directly (not xdg-desktop-portal-gtk). Theming it requires `GTK_THEME` env var — Brave must inherit it from Hyprland.
+> **Note**: Dolphin has a known bug where it ignores qt6ct palette colors directly ([KDE Bug](https://www.mail-archive.com/kde-bugs-dist@kde.org/msg1019025.html)). The two-layer approach (qt6ct for Qt palette + KDE `.colors` file for KDE-specific roles) is required for full theming. Both files use the same Gruvbox Material Dark palette.
+
+### GTK
+
+GTK theming is split across multiple mechanisms depending on the app:
+
+| Mechanism | File | Affects |
+|---|---|---|
+| `GTK_THEME` env var | `hyprland.conf` → `env = GTK_THEME,Gruvbox-Material-Dark` | GTK3 + GTK4 apps that inherit Hyprland's env (Brave file picker, most apps) |
+| GTK4 CSS | `/usr/share/themes/Gruvbox-Material-Dark/gtk-4.0/gtk.css` | GTK4/libadwaita apps (Ghostty dialogs, etc.) — loaded automatically when `GTK_THEME` is set |
+| GTK3 settings | `~/.config/gtk-3.0/settings.ini` | GTK3 apps not using gsettings |
+| GTK4 settings | `~/.config/gtk-4.0/settings.ini` | GTK4 apps not using gsettings |
+
+**Theme package**: `gruvbox-material-gtk-theme-git` (AUR) — installs to `/usr/share/themes/Gruvbox-Material-Dark/`
+
+> **Note**: To apply GTK_THEME changes, a full Hyprland restart is required — `hyprctl reload` is not sufficient since env vars set at session start are inherited by all child processes and cannot be updated mid-session.
+>
+> **Note**: Brave's file picker dialog uses GTK directly (not xdg-desktop-portal-gtk). Theming it requires the `GTK_THEME` env var — Brave must inherit it from Hyprland at launch.
 >
 > **Note**: Brave uses two window classes — `brave-browser` for browser windows, `brave` for native OS dialogs. Hyprland windowrules must use `brave-browser` to target browser windows.
 
@@ -102,7 +120,7 @@
 |---|---|
 | **Terminal** | Ghostty (primary) |
 | **Shell** | Fish (with cachyos-fish-config) |
-| **Editor** | Neovim (plugins: markview.nvim, transparent.nvim, wilder.nvim, telescope.nvim, colorscheme-persist.nvim) |
+| **Editor** | Neovim (plugins: markview.nvim, transparent.nvim, wilder.nvim, telescope.nvim, colorscheme-persist.nvim) — config files in `lua/config/` must be explicitly `require()`'d in `init.lua` to be loaded (e.g. `require("config.keymaps")`) |
 | **File manager** | Dolphin |
 | **Browser** | Brave |
 | **AUR helper** | Paru |
@@ -113,8 +131,41 @@
 
 ## Fonts
 
-- `ttf-meslo-nerd` — primary (Nerd Font, used in terminal)
+- `ttf-jetbrains-mono-nerd` — primary (used in terminal, bar, hyprlock)
 - `noto-fonts` + `noto-fonts-cjk` + `noto-fonts-emoji` — system-wide coverage
+
+### Nerd Font icon codepoints
+
+The quickshell bar uses weather icons from the Nerd Fonts weather set (`0xe300–0xe3e3`). Codepoints differ from what online references often show — always validate against the actual installed font:
+
+```bash
+# Verify what a codepoint actually renders as in your font:
+python3 -c "
+from fontTools.ttLib import TTFont
+# ... (parse post table for glyph names at codepoints)
+"
+```
+
+Key codepoints in use (validated against `JetBrainsMonoNerdFont-Regular.ttf`):
+
+| Codepoint | Glyph name | Used for |
+|---|---|---|
+| `\ue30d` | `weather-day_sunny` | Clear/sunny |
+| `\ue302` | `weather-day_cloudy` | Partly cloudy |
+| `\ue312` | `weather-cloudy` | Cloudy/overcast/default |
+| `\ue313` | `weather-fog` | Fog/mist |
+| `\ue31b` | `weather-sprinkle` | Light drizzle/patchy rain |
+| `\ue318` | `weather-rain` | Rain |
+| `\ue319` | `weather-showers` | Heavy rain |
+| `\ue316` | `weather-rain_mix` | Freezing rain/sleet mix |
+| `\ue3ad` | `weather-sleet` | Sleet |
+| `\ue31a` | `weather-snow` | Snow |
+| `\ue35e` | `weather-snow_wind` | Blowing snow/blizzard |
+| `\ue314` | `weather-hail` | Ice pellets/hail |
+| `\ue31c` | `weather-storm_showers` | Thunder + light precip |
+| `\ue31d` | `weather-thunderstorm` | Thunderstorm |
+
+> **Note**: `\ue318` is `weather-rain`, NOT cloudy — a common mistake. Use `\ue312` for cloudy/overcast.
 
 ---
 

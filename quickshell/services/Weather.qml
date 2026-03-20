@@ -8,22 +8,58 @@ QtObject {
     property bool   valid:       false
     property int    temperature: 0
     property int    weatherCode: 0
-    property string icon:        "\ue318"
+    property string icon:        "\ue312"
     property string city:        ""
     property string _raw:        ""
     property real   _lastTime:   0
 
     function codeToIcon(code) {
-        if (code === 113) return "\ue30d"
-        if (code === 116) return "\ue302"
-        if (code === 119 || code === 122) return "\ue318"
-        if (code === 143 || code === 248 || code === 260) return "\ue313"
-        if (code === 176 || code === 263 || code === 266 ||
-            code === 293 || code === 296) return "\ue314"
-        if ((code >= 299 && code <= 308) || code === 356) return "\ue319"
-        if (code === 200 || code === 386 || code === 389) return "\ue31c"
-        if (code >= 323 && code <= 338) return "\ue31a"
-        return "\ue318"
+        // Clear / partly cloudy
+        if (code === 113) return "\ue30d"  // day_sunny
+        if (code === 116) return "\ue302"  // day_cloudy (sun + cloud)
+        if (code === 119 || code === 122) return "\ue312"  // cloudy / overcast
+
+        // Fog / mist
+        if (code === 143 || code === 248 || code === 260) return "\ue313"  // fog
+
+        // Blowing snow / blizzard
+        if (code === 227 || code === 230) return "\ue35e"  // snow_wind
+
+        // Thundery outbreaks (no heavy precip)
+        if (code === 200) return "\ue31d"  // thunderstorm
+
+        // Drizzle / patchy light rain / sprinkle
+        if (code === 176 || code === 185 || code === 263 || code === 266 ||
+            code === 293 || code === 353) return "\ue31b"  // sprinkle
+
+        // Freezing drizzle / rain mix (rain + ice)
+        if (code === 281 || code === 284 || code === 311 || code === 314) return "\ue316"  // rain_mix
+
+        // Light–moderate rain
+        if (code === 296 || code === 299 || code === 302) return "\ue318"  // rain
+
+        // Heavy rain / showers / torrential
+        if (code === 305 || code === 308 || code === 356 || code === 359) return "\ue319"  // showers
+
+        // Sleet
+        if (code === 182 || code === 317 || code === 320 ||
+            code === 362 || code === 365) return "\ue3ad"  // sleet
+
+        // Snow
+        if (code === 179 || code === 323 || code === 326 || code === 329 ||
+            code === 332 || code === 335 || code === 338 ||
+            code === 368 || code === 371) return "\ue31a"  // snow
+
+        // Ice pellets / hail
+        if (code === 350 || code === 374 || code === 377) return "\ue314"  // hail
+
+        // Thunder with light precip
+        if (code === 386 || code === 392) return "\ue31c"  // storm_showers
+
+        // Thunder with heavy precip
+        if (code === 389 || code === 395) return "\ue31d"  // thunderstorm
+
+        return "\ue312"  // cloudy (fallback)
     }
 
     property var proc: Process {

@@ -7,7 +7,7 @@ RowLayout {
     spacing: 4
 
     Text {
-        text:           Weather.valid ? Weather.icon : "\ue318"
+        text:           Weather.valid ? Weather.icon : "\ue312"
         color:          Weather.valid ? Colors.accent : Colors.muted
         font.pixelSize: Config.fontSize + 2
         font.family:    Config.fontFamily
