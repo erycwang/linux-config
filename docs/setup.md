@@ -25,7 +25,7 @@
 | Component | Setup |
 |---|---|
 | **GPU drivers** | mesa (Intel Iris) |
-| **Audio subsystem** | PipeWire (with WirePlumber + PulseAudio compat) |
+| **Audio subsystem** | PipeWire (with WirePlumber + PulseAudio compat) — real-time scheduling via rtkit + `realtime` group |
 | **Audio (T2-specific)** | apple-t2-audio-config, sof-firmware |
 | **Networking** | iwd (WiFi), NetworkManager |
 | **Bluetooth** | bluetooth daemon |
@@ -214,5 +214,7 @@ Patterns learned from building the bar widgets:
 - Configs symlinked from `~/.config/` to this repo (repo is source of truth): `hypr/`, `nvim/`, `ghostty/`. Hyprland's inotify-based config watcher does not detect changes through symlinks, so auto-reload stopped working. Fixed upstream in [hyprwm/Hyprland#9219](https://github.com/hyprwm/Hyprland/pull/9219) (merged 2025-01-31). If still broken, use `Super+Shift+]` to manually reload (`hyprctl reload`).
 - Monitors configured in `hyprland.conf`: `eDP-1` (internal, 1.07x scale), `DP-2` (external, 1.2x scale, centered above)
 - Terminal set to `ghostty`, file manager `dolphin`, launcher `wofi`, browser `firefox` in Hyprland config; `TERMINAL=ghostty`, `EDITOR=nvim`, `VISUAL=nvim` set as env vars
+- **PipeWire RT scheduling**: requires `realtime-privileges` + `rtkit` packages, user in `realtime` group, and `rtkit-daemon` enabled. Without this, `mod.rt: could not set nice-level to -11: Permission denied` appears every boot and demanding codecs (LDAC) stutter. Set profile via `pactl set-card-profile <card> <profile>` — not `wpctl set-profile` (wpctl uses numeric indices, pactl uses names).
+- **WH-1000XM3 Bluetooth**: using AAC profile (`a2dp-sink-aac`). LDAC (`a2dp-sink`) also works now that RT scheduling is fixed but has higher latency. Profile persisted in `~/.local/state/wireplumber/default-profile`.
 - `kidletime` (KDE idle detection library) is installed but not actively managing idle/suspend
 - Kitty and Alacritty are installed but likely leftovers (Ghostty is the primary terminal)

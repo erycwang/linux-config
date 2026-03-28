@@ -4,6 +4,35 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ---
 
+## 2026-03-28
+
+### PipeWire — real-time scheduling fix (Bluetooth audio stuttering)
+
+**Symptom**: WH-1000XM3 Bluetooth headset stuttering heavily, especially with LDAC codec. `journalctl --user -u pipewire` showed `mod.rt: could not set nice-level to -11: Permission denied` on every boot.
+
+**Root cause**: PipeWire's `mod.rt` module requests real-time scheduling via rtkit, but rtkit only grants it to members of the `realtime` group. `rtkit` was installed but `realtime-privileges` (which creates the group + udev rules) was not, and the user was not in the group.
+
+**Fix**:
+```bash
+sudo pacman -S realtime-privileges
+sudo usermod -a -G realtime $USER
+sudo systemctl enable --now rtkit-daemon
+# then log out and back in for group membership to take effect
+```
+
+**What each step does**:
+- `realtime-privileges` — creates the `realtime` group and udev rules granting group members permission to request RT scheduling
+- `usermod -a -G realtime` — adds user to the group (requires logout to take effect)
+- `systemctl enable --now rtkit-daemon` — starts rtkit and enables it on boot; PipeWire's `mod.rt` talks to it over D-Bus to elevate audio thread priority
+
+**Bluetooth headset profile** (WH-1000XM3 accidentally set to `off` via `wpctl set-profile 119 0`):
+- Restored with: `pactl set-card-profile bluez_card.38_18_4C_4B_25_6A a2dp-sink-aac`
+- Tried LDAC (`a2dp-sink`) first but it requires RT scheduling to run cleanly — switched to AAC (`a2dp-sink-aac`) which is less demanding and lower latency
+- After RT fix, LDAC is also viable if preferred: `pactl set-card-profile bluez_card.38_18_4C_4B_25_6A a2dp-sink`
+- WirePlumber state file at `~/.local/state/wireplumber/default-profile` persists the chosen profile across reboots
+
+---
+
 ## 2026-03-20
 
 ### Quickshell — workspace bar improvements
