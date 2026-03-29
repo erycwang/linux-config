@@ -67,7 +67,7 @@ QtObject {
         command: ["sh", "-c",
             "city=$(curl -s --max-time 5 'https://wttr.in/?format=%l') && " +
             "curl -s --max-time 10 'https://wttr.in/?format=j1' | " +
-            "jq -r --arg city \"$city\" '[.data.current_condition[0].temp_C, .data.current_condition[0].weatherCode, $city] | join(\"|\")'"]
+            "jq -r --arg city \"$city\" '[.current_condition[0].temp_C, .current_condition[0].weatherCode, $city] | join(\"|\")'"]
         stdout: StdioCollector {
             onStreamFinished: root._raw = this.text.trim()
         }

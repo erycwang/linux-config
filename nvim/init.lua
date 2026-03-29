@@ -3,6 +3,7 @@ require("config.keymaps")
 
 vim.opt.number = true
 vim.opt.relativenumber = true
+vim.opt.clipboard = "unnamedplus" 
 
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = vim.fn.expand("~") .. "/Projects/linux-config/hypr/*",

@@ -2,6 +2,7 @@
 MatchName=*Apple Inc. Apple Internal Keyboard / Trackpad*
 MatchUdevType=touchpad
 ModelAppleTouchpad=1
+AttrTouchpadIntegration=internal
 AttrTouchSizeRange=50:30
 AttrPalmSizeThreshold=1600
 

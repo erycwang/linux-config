@@ -6,6 +6,20 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-28
 
+### swayosd — add user to `input` and `uinput` groups
+
+**Symptom**: `swayosd-server` crashes with SIGSEGV inside `libgtk-4.so` shortly after startup. Journal shows `SwayOSD LibInput Backend isn't available, waiting...` on launch.
+
+**Root cause**: swayosd uses libinput to detect keyboard state (capslock/numlock). Without membership in the `input` group, it can't access `/dev/input` devices — the backend hangs waiting, and swayosd eventually segfaults in GTK4.
+
+**Fix**:
+```bash
+sudo usermod -aG input $USER
+# log out and back in for group membership to take effect
+```
+
+---
+
 ### PipeWire — real-time scheduling fix (Bluetooth audio stuttering)
 
 **Symptom**: WH-1000XM3 Bluetooth headset stuttering heavily, especially with LDAC codec. `journalctl --user -u pipewire` showed `mod.rt: could not set nice-level to -11: Permission denied` on every boot.
