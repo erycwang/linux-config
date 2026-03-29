@@ -1,8 +1,8 @@
 # Suspend fix for 2020 13" MacBook Pro (Touch Bar), BCM4364 WiFi, T2 chip.
-# Runs as a Before=sleep.target service. Pre-suspend: stops NetworkManager
-# and iwd, then unloads brcmfmac, touch bar (hid_appletb_*), and apple-bce
-# modules in dependency order. Post-resume: reloads them in reverse order
-# and restarts networking.
+# Runs as a Before=sleep.target service. Pre-suspend: stops PipeWire,
+# NetworkManager and iwd, then unloads brcmfmac, touch bar (hid_appletb_*),
+# and apple-bce modules in dependency order. Post-resume: reloads them in
+# reverse order and restarts networking and PipeWire.
 #
 
 [Unit]
@@ -23,9 +23,11 @@ ExecStart=-/usr/bin/modprobe -r brcmfmac_wcc
 ExecStart=-/usr/bin/modprobe -r brcmfmac
 ExecStart=-/bin/sh -c 'echo 1 > /sys/bus/pci/devices/0000:e5:00.0/remove'
 ExecStart=-/usr/bin/rmmod -f hid_appletb_kbd hid_appletb_bl
-ExecStart=-/usr/bin/rmmod -f apple-bce
+ExecStart=-/usr/bin/systemctl --user -M ericw@.host stop wireplumber pipewire-pulse pipewire
+ExecStart=-/usr/bin/rmmod apple-bce
 ExecStop=/usr/bin/modprobe apple-bce
 ExecStop=/usr/bin/sleep 2
+ExecStop=/usr/bin/systemctl --user -M ericw@.host start pipewire pipewire-pulse wireplumber
 ExecStop=/usr/bin/modprobe hid_appletb_bl
 ExecStop=/usr/bin/modprobe hid_appletb_kbd
 ExecStop=/usr/bin/rfkill unblock wifi
@@ -36,6 +38,7 @@ ExecStop=/usr/bin/modprobe brcmfmac_wcc
 ExecStop=/usr/bin/udevadm settle
 ExecStop=/usr/bin/systemctl start iwd
 ExecStop=/usr/bin/systemctl start NetworkManager
+ExecStop=/usr/bin/systemctl restart t2fanrd
 
 [Install]
 WantedBy=sleep.target
