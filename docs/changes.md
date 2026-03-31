@@ -6,6 +6,27 @@ A running log of changes made to this system — what was added, removed, or mod
 
 ## 2026-03-30
 
+### suspend-fix-t2.service — add btusb cycle (LDAC stutter not resolved)
+
+**Symptom**: WH-1000XM3 LDAC audio stutters heavily after a suspend-resume cycle. AAC works but LDAC does not. On a clean boot, LDAC works perfectly.
+
+**Root cause**: The Broadcom BCM4364 is a combo chip — Wi-Fi (brcmfmac) and Bluetooth (btusb) share the same physical silicon and 2.4GHz antenna. On resume, the Wi-Fi driver aggressively rescans for networks, hogging the shared antenna. LDAC requires up to 990 kbps of uninterrupted 2.4GHz bandwidth; AAC needs ~256 kbps and scrapes through. The existing service already did a PCIe cold-restart of the combo chip for Wi-Fi. However, `btusb` was left loaded across suspend, so Bluetooth did a "warm wake" while Wi-Fi did a cold reset — this desynchronized the coexistence firmware that time-slices the 2.4GHz antenna between radios.
+
+**Fix**: Add `btusb` to the module unload/reload cycle so both the Wi-Fi and Bluetooth sides undergo a cold restart together through the existing PCIe remove/rescan sequence. Also restart `bluetooth.service` on resume so BlueZ renegotiates the A2DP profile with PipeWire cleanly.
+
+**Changes to `suspend-fix-t2.service`**:
+- Pre-suspend: `rfkill block wifi` → `rfkill block wifi bluetooth`; `modprobe -r brcmfmac` → `modprobe -r brcmfmac btusb`
+- Post-resume: `modprobe brcmfmac brcmfmac_wcc btusb` (combined; modprobe handles dep order — `brcmfmac_wcc` depends on `brcmfmac`); `rfkill unblock wifi` → `rfkill unblock wifi bluetooth`; added `systemctl restart bluetooth`
+
+**Result**: ❌ Did not fix the issue. LDAC stutter persists after suspend. Root cause still unknown.
+
+**Follow-up changes (attempting to fix LDAC)**:
+- Added `systemctl stop bluetooth` at the top of pre-suspend sequence — stops BlueZ before btusb is unloaded
+- Added `sleep 1` after PCI rescan on resume — gives the Broadcom chip time to initialize before modprobe runs
+- Added `sleep 1` after `modprobe brcmfmac brcmfmac_wcc btusb` on resume — gives drivers time to settle before networking/bluetooth services start
+
+---
+
 ### hyprland — fix lid switch scale out of sync with monitor config
 
 **Symptom**: Opening the laptop lid after suspend re-enabled eDP-1 at scale 1.25 instead of 1.33, causing a brief layout recalculation.

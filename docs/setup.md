@@ -30,7 +30,7 @@
 | **Networking** | iwd (WiFi), NetworkManager |
 | **Bluetooth** | bluetooth daemon |
 | **Power management** | power-profiles-daemon |
-| **Suspend (T2)** | suspend-fix-t2.service (unloads apple-bce, brcmfmac_wcc, brcmfmac, touch bar modules + iwd/NM around sleep; S3 deep sleep) |
+| **Suspend (T2)** | suspend-fix-t2.service (unloads apple-bce, brcmfmac_wcc, brcmfmac, btusb, touch bar modules + iwd/NM around sleep; PCIe cold-restart of Broadcom combo chip; bluetooth daemon restarted on resume; S3 deep sleep) |
 | **Touchpad (T2)** | libinput quirks at `/etc/libinput/local-overrides.quirks` — raises palm rejection threshold to 1600, tunes touch size range |
 | **Fan control (T2)** | t2fanrd (enabled, active) |
 | **Storage optimization** | Snapper (BTRFS snapshots, configured for root) |
@@ -272,6 +272,11 @@ Patterns learned from building the bar widgets:
 If they drift, opening the lid after suspend will momentarily apply the wrong scale and trigger a layout recalculation.
 - Terminal set to `ghostty`, file manager `dolphin`, launcher `wofi`, browser `firefox` in Hyprland config; `TERMINAL=ghostty`, `EDITOR=nvim`, `VISUAL=nvim` set as env vars
 - **PipeWire RT scheduling**: requires `realtime-privileges` + `rtkit` packages, user in `realtime` group, and `rtkit-daemon` enabled. Without this, `mod.rt: could not set nice-level to -11: Permission denied` appears every boot and demanding codecs (LDAC) stutter. Set profile via `pactl set-card-profile <card> <profile>` — not `wpctl set-profile` (wpctl uses numeric indices, pactl uses names).
-- **WH-1000XM3 Bluetooth**: using AAC profile (`a2dp-sink-aac`). LDAC (`a2dp-sink`) also works now that RT scheduling is fixed but has higher latency. Profile persisted in `~/.local/state/wireplumber/default-profile`.
+- **WH-1000XM3 Bluetooth**: LDAC (`a2dp-sink`) is the preferred profile — works on clean boot and after suspend (requires the btusb cycle in `suspend-fix-t2.service`). Profile persisted in `~/.local/state/wireplumber/default-profile`. Root cause of post-suspend LDAC stutter: Broadcom BCM4364 is a combo Wi-Fi+BT chip sharing the 2.4GHz antenna — see `docs/changes.md` § 2026-03-30 suspend entry.
 - `kidletime` (KDE idle detection library) is installed but not actively managing idle/suspend
 - Kitty and Alacritty are installed but likely leftovers (Ghostty is the primary terminal)
+
+
+For the wifi, I set the fiOs network to autoconnect using nmcli commands. I also have a new file that overwrites or hides t2 wifi
+
+
