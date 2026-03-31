@@ -4,4 +4,5 @@ import "modules/bar"  // QML only auto-imports UpperCase.qml from the same direc
 
 ShellRoot {
     BarWrapper {}
+    BluetoothPopup {}
 }

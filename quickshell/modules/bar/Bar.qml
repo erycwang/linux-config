@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "widgets"
 import "../../config"
+import "../../services" as Services
 
 Item {
     id: root
@@ -42,8 +43,8 @@ Item {
         Separator {}
         Temp {}
         Separator {}
-        Bluetooth { id: btWidget }
-        Separator { visible: btWidget.visible; width: visible ? implicitWidth : 0 }
+        Bluetooth { id: btWidget; onClicked: Services.BluetoothPopupState.toggle(root.screen) }
+        Separator {}
         Wifi {}
         Separator {}
         Battery {}

@@ -2,7 +2,10 @@ import QtQuick
 import Quickshell.Bluetooth
 import "../../../config"
 
-Text {
+Item {
+    id: root
+    signal clicked()
+
     property int connectedCount: {
         let count = 0
         for (const d of Bluetooth.devices.values) {
@@ -11,11 +14,21 @@ Text {
         return count
     }
 
-    visible: connectedCount > 0
-    width: visible ? implicitWidth : 0
+    implicitWidth: label.implicitWidth
+    implicitHeight: label.implicitHeight
 
-    text: "BT: " + connectedCount
-    color: Colors.fg
-    font.pixelSize: Config.fontSize
-    font.family: Config.fontFamily
+    Text {
+        id: label
+        anchors.centerIn: parent
+        text: root.connectedCount > 0 ? "BT" + ": "+ root.connectedCount : "BT"
+        color: root.connectedCount > 0 ? Colors.accent : Colors.muted
+        font.pixelSize: Config.fontSize
+        font.family: Config.fontFamily
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
+    }
 }
